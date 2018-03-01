@@ -1,0 +1,131 @@
+;; -*- mode: scheme; -*-
+
+(define flat (with-state (build-polygons 0 6)))
+
+(with-primitive 
+ flat
+ (hide #t)
+ (pdata-set! "p" 0 (vector -0.5 -0.5 0))
+ (pdata-set! "p" 1 (vector -0.5 0.5 0))
+ (pdata-set! "p" 2 (vector 0.5 -0.5 0))
+ (pdata-set! "p" 3 (vector 0.5 0.5 0))
+ (pdata-set! "p" 4 (vector 0.5 -0.5 0))
+ (pdata-set! "p" 5 (vector -0.5 0.5 0))
+
+ (pdata-set! "t" 0 (vector 0 0 0))
+ (pdata-set! "t" 1 (vector 0 1 0))
+ (pdata-set! "t" 2 (vector 1 0 0))
+ (pdata-set! "t" 3 (vector 1 1 0))
+ (pdata-set! "t" 4 (vector 1 0 0))
+ (pdata-set! "t" 5 (vector 0 1 0))
+
+ (pdata-map! (lambda (n) (vector 0 -1 0)) "n")
+ (pdata-map! (lambda (n) (vector 1 1 1)) "c")
+ 
+ (pdata-upload!))
+
+(clear-colour (vector 0 0 0))
+
+(set-camera-transform 
+ (mat4.rotateX  
+  (mat4.translate (camera-transform) (vector 0 0 -7))
+  (* 0.5 Math.PI)))
+
+(js ";")
+
+;; (shader vertex-unlit fragment-unlit)
+
+(define (build-plane)
+  (with-state
+   (shader vertex-unlit fragment-unlit)
+   (rotate (vector 90 0 180))
+   (scale (vector 30 30 30))
+   (build-instance flat)))
+  
+(define textures (list "tree.png" "shrub.png" "grass.png"))
+(define colours (list (vector 0.1 0.1 0.1) (vector 0.2 0.2 0.2) (vector 0.3 0.3 0.3)))
+
+(define roots (build-list 3 (lambda (_) (build-locator))))
+
+;; 10 -10
+
+(define levels 
+  (with-state
+   (translate (vector -42 -10 -3))
+   (build-list
+    3
+    (lambda (l)
+      (translate (vector 0 4 0))
+      (build-list
+       5
+       (lambda (i)
+	 (with-state
+	  (translate (vector (* i (+ 20 (* (crndf) 5))) 0 0))
+	  (texture (load-texture (list-ref textures l)))
+	  (colour (list-ref colours l))
+	  (parent (list-ref roots l))
+	  (build-plane))))))))
+
+(define butterflies
+  (with-state
+   (texture (load-texture "butterfly.png"))
+   (parent (car roots))
+   (build-list
+    5
+    (lambda (_)
+      (list
+       (random 10)
+       (vmul (crndvec) 50)
+       (with-state
+	;;(colour (rndvec))
+	(build-plane)))))))
+
+(define (parallax-levels)
+  (for-each
+   (lambda (root)
+     (with-primitive 
+      root
+      (translate (vector (* 0.1 (cos (time))) 0 0))))
+   roots))
+
+(define (sway-levels)
+  (for-each
+   (lambda (level)
+     (for-each
+      (lambda (p)
+	(with-primitive 
+	 p
+	 (rotate (vector 0 0 (* 0.02 (sin (+ p (time))))))))
+      level))
+   (cdr (reverse levels))))
+
+(define (zoom-levels)
+  (set-camera-transform 
+   (mat4.rotateX  
+    (mat4.translate (midentity) 
+		    (vector 0 0 (+ (* (fmod (time) 6) 2) -27)))
+    (* 0.5 Math.PI))))
+
+(define (update-butterflies butterflies)
+  (map
+   (lambda (b)
+     (with-primitive 
+      (caddr b)
+      (identity)
+      (rotate (vector 90 0 180))
+      (translate (vector (vx (cadr b)) 
+			 (vy (cadr b)) 
+			 (car b)))
+      (list (if (< (car b) -15) 10 (- (car b) 0.1)) 
+	    (if (< (car b) -15) (vmul (crndvec) 20) (cadr b)) 
+	    (caddr b))))
+   butterflies))
+
+(msg levels)
+
+(every-frame (begin 
+	       (set! butterflies (update-butterflies butterflies))
+	       ;;(parallax-levels)
+	       ;;(sway-levels)
+	       (zoom-levels)
+	       ))
