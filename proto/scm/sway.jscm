@@ -125,7 +125,7 @@
 
 (every-frame (begin 
 	       (set! butterflies (update-butterflies butterflies))
-	       (parallax-levels)
-	       ;;(sway-levels)
+	       ;;(parallax-levels)
+	       (sway-levels)
 	       ;;(zoom-levels)
 	       ))
