@@ -8,37 +8,60 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-butterfly root left-wing right-wing)
-  (list root left-wing right-wing))
+(define (make-butterfly root left-wing right-wing jitter)
+  (list root left-wing right-wing jitter))
 
 (define (butterfly-root b) (list-ref b 0))
 (define (butterfly-left-wing b) (list-ref b 1))
 (define (butterfly-right-wing b) (list-ref b 2))
+(define (butterfly-jitter b) (list-ref b 3))
 
-(define (build-butterfly)
-  (let ((root (with-state (rotate (vector -45 0 0)) (build-locator))))
-    (with-state
-     (shader-assign-compiled "unlit")   
-     (parent root)
-     (texture (load-texture "butterfly-01.png"))
-     (rotate (vector 0 0 0))
-     (scale (vector 10 10 10))
-     (make-butterfly
-      root
-      (with-state 
+(define (build-butterfly pos)
+  (let ((root (with-state (translate pos) (rotate (vector 45 0 0)) (build-locator))))
+    (let ((ret
+	   (with-state
+	    (shader-assign-compiled "default")   
+	    (parent root)
+	    (texture (load-texture "butterfly-01.png"))
+	    (scale (vector 10 10 10))
+	    (hint-nozwrite)
+	    (make-butterfly
+	     root
+	     (load-primitive "models/plane.obj")
+	     (load-primitive "models/plane.obj")
+	     (* (rndf) 6.2)))))
+      (with-primitive 
+       (butterfly-left-wing ret)
        (scale (vector -1 1 1))
-       (translate (vector 0.5 0 0))
-       (load-primitive "models/plane.obj"))
-      (with-state (load-primitive "models/plane.obj"))))))
+       (translate (vector 0.24 0 0))
+       (apply-transform!)
+       )
+      (with-primitive 
+       (butterfly-right-wing ret)
+       (translate (vector 0.24 0 0))
+       (apply-transform!)
+       )
+      ret)))
 
 (define (animate-butterfly! b t)
   (with-primitive 
    (butterfly-left-wing b)
-   (rotate (vector 0 (* 1 (sin (* t 10))) 0)))
+   (rotate (vector 0 (* 5 (sin (+ (butterfly-jitter b) (* t 10)))) 0)))
   (with-primitive 
    (butterfly-right-wing b)
-   (rotate (vector 0 (* -1 (sin (* t 10))) 0))))
+   (rotate (vector 0 (* -5 (sin (+ (butterfly-jitter b) (* t 10)))) 0))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (build-butterflies n)
+  (build-list n (lambda (_) 
+		   (build-butterfly (vmul (crndvec) 10)))))
+
+(define (animate-butterflies! b t)
+  (for-each 
+   (lambda (b)
+     (animate-butterfly! b t))
+   b))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -95,16 +118,17 @@
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
 
-  (animate-butterfly! test-butterfly (time))
+  (animate-butterflies! butterflies (time))
   
   ;;(sway-levels)
   )
 
 (define init #f)
-(define test-butterfly #f)
+(define butterflies '())
 
 (define (run-init)
-  (set! flat (with-state (load-primitive "models/plane.obj")))
+;;  (set! flat (with-state (load-primitive "models/plane.obj")))
+  ;;(set! plane (with-state (load-primitive "models/plane.obj")))
 
   (clear-colour (vector 0 0 0))
 
@@ -132,9 +156,7 @@
   ;; 		(parent (list-ref roots l))
   ;; 		(build-plane))))))))
 
-  (set! test-butterfly (build-butterfly))
-  (msg test-butterfly)
-
+  (set! butterflies (build-butterflies 10))
   
   (clear-colour (list 0.0 0.0 0.0 0.0)))
 
