@@ -1,0 +1,3 @@
+[submodule "game/flx"]
+	path = game/flx
+	url = git@github.com:fo-am/flx.git
