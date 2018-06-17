@@ -6,6 +6,42 @@
 
 (define flat #f)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-butterfly root left-wing right-wing)
+  (list root left-wing right-wing))
+
+(define (butterfly-root b) (list-ref b 0))
+(define (butterfly-left-wing b) (list-ref b 1))
+(define (butterfly-right-wing b) (list-ref b 2))
+
+(define (build-butterfly)
+  (let ((root (with-state (rotate (vector -45 0 0)) (build-locator))))
+    (with-state
+     (shader-assign-compiled "unlit")   
+     (parent root)
+     (texture (load-texture "butterfly-01.png"))
+     (rotate (vector 0 0 0))
+     (scale (vector 10 10 10))
+     (make-butterfly
+      root
+      (with-state 
+       (scale (vector -1 1 1))
+       (translate (vector 0.5 0 0))
+       (load-primitive "models/plane.obj"))
+      (with-state (load-primitive "models/plane.obj"))))))
+
+(define (animate-butterfly! b t)
+  (with-primitive 
+   (butterfly-left-wing b)
+   (rotate (vector 0 (* 1 (sin (* t 10))) 0)))
+  (with-primitive 
+   (butterfly-right-wing b)
+   (rotate (vector 0 (* -1 (sin (* t 10))) 0))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (build-plane)
   (with-state
    (shader-assign-compiled "unlit")   
@@ -16,19 +52,7 @@
 (define colours (list (vector 0.1 0.1 0.1) (vector 0.2 0.2 0.2) (vector 0.3 0.3 0.3)))
 
 (define roots #f)
-
-;; 10 -10
-
 (define levels #f)
-(define butterflies #f)
-
-(define (parallax-levels)
-  (for-each
-   (lambda (root)
-     (with-primitive 
-      root
-      (translate (vector (* 0.1 (cos (time))) 0 0))))
-   roots))
 
 (define (sway-levels)
   (for-each
@@ -40,30 +64,6 @@
 	 (rotate (vector 0 0 (* 0.02 (sin (+ p (time))))))))
       level))
    (cdr (reverse levels))))
-
-(define (zoom-levels)
-  (set-camera-transform 
-   (mat4.rotateX  
-    (mat4.translate (midentity) 
-		    (vector 0 0 (+ (* (fmod (time) 6) 2) -27)))
-    (* 0.5 Math.PI))))
-
-(define (update-butterflies butterflies)
-  (map
-   (lambda (b)
-     (with-primitive 
-      (caddr b)
-      (identity)
-      (rotate (vector 90 0 180))
-      (translate (vector (vx (cadr b)) 
-			 (vy (cadr b)) 
-			 (car b)))
-      (list (if (< (car b) -15) 10 (- (car b) 0.1)) 
-	    (if (< (car b) -15) (vmul (crndvec) 20) (cadr b)) 
-	    (caddr b))))
-   butterflies))
-
-(msg levels)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -84,25 +84,24 @@
 (load-texture "grass.png")
 (load-texture "test-grey.png")
 (load-texture "tree.png")
+(load-texture "butterfly-01.png")
 
 (load-mesh-cache "models/plane.obj")
 (load-mesh-cache "models/flag.obj")
-
-(build-cube)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (render-game)
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
+
+  (animate-butterfly! test-butterfly (time))
   
-  (set! butterflies (update-butterflies butterflies))
-  ;;(parallax-levels)
-  (sway-levels)
-  ;;(zoom-levels)
+  ;;(sway-levels)
   )
 
 (define init #f)
+(define test-butterfly #f)
 
 (define (run-init)
   (set! flat (with-state (load-primitive "models/plane.obj")))
@@ -116,36 +115,25 @@
   
   (set! roots (build-list 3 (lambda (_) (build-locator))))
 
-  (set! levels 
-	(with-state
-	 (translate (vector -42 -10 -3))
-	 (build-list
-	  3
-	  (lambda (l)
-	    (translate (vector 0 4 0))
-	    (build-list
-	     5
-	     (lambda (i)
-	       (with-state
-		(translate (vector (* i (+ 20 (* (crndf) 5))) 0 0))
-		(texture (load-texture (list-ref layer-textures l)))
-		(colour (list-ref colours l))
-		(parent (list-ref roots l))
-		(build-plane))))))))
+  ;; (set! levels 
+  ;; 	(with-state
+  ;; 	 (translate (vector -42 -10 -3))
+  ;; 	 (build-list
+  ;; 	  3
+  ;; 	  (lambda (l)
+  ;; 	    (translate (vector 0 4 0))
+  ;; 	    (build-list
+  ;; 	     5
+  ;; 	     (lambda (i)
+  ;; 	       (with-state
+  ;; 		(translate (vector (* i (+ 20 (* (crndf) 5))) 0 0))
+  ;; 		(texture (load-texture (list-ref layer-textures l)))
+  ;; 		(colour (list-ref colours l))
+  ;; 		(parent (list-ref roots l))
+  ;; 		(build-plane))))))))
 
-  (set! butterflies
-	(with-state
-	 (texture (load-texture "butterfly.png"))
-	 (parent (car roots))
-	 (build-list
-	  5
-	  (lambda (_)
-	    (list
-	     (random 10)
-	     (vmul (crndvec) 50)
-	     (with-state
-	      ;;(colour (rndvec))
-	      (build-plane)))))))
+  (set! test-butterfly (build-butterfly))
+  (msg test-butterfly)
 
   
   (clear-colour (list 0.0 0.0 0.0 0.0)))

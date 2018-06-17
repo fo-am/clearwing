@@ -46,6 +46,7 @@ resources = [
     "textures/grass.png",
     "textures/test-grey.png", 
     "textures/tree.png",
+    "textures/butterfly-01.png",
 
     "models/plane.obj",
     "models/flag.obj"

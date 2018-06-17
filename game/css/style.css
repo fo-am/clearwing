@@ -33,6 +33,15 @@ input {
 }
 
 #webgl-canvas {
+    background: url('../textures/bg.png'); 
+    position: absolute; 
+    left: 0px; 
+    top: 0px; 
+    width: 100vw; 
+    height: 100vh;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
 }
 
 #canvas2 {
