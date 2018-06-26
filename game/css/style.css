@@ -33,7 +33,7 @@ input {
 }
 
 #webgl-canvas {
-    background: url('../textures/bg.png'); 
+    background: url('../textures/bg-check.png'); 
     position: absolute; 
     left: 0px; 
     top: 0px; 

@@ -54,8 +54,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (build-butterflies n)
-  (build-list n (lambda (_) 
-		   (build-butterfly (vmul (crndvec) 10)))))
+  (build-list n (lambda (i) 
+		   (build-butterfly (vmul (vector (- (modulo i 3) 1) (- (quotient i 3) 1) 0) 10)))))
 
 (define (animate-butterflies! b t)
   (for-each 
@@ -156,7 +156,7 @@
   ;; 		(parent (list-ref roots l))
   ;; 		(build-plane))))))))
 
-  (set! butterflies (build-butterflies 10))
+  (set! butterflies (build-butterflies 9))
   
   (clear-colour (list 0.0 0.0 0.0 0.0)))
 

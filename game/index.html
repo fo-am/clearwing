@@ -145,8 +145,8 @@ ret\n\
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n\
 \n\
 (define (build-butterflies n)\n\
-  (build-list n (lambda (_) \n\
-		   (build-butterfly (vmul (crndvec) 10)))))\n\
+  (build-list n (lambda (i) \n\
+		   (build-butterfly (vmul (vector (- (modulo i 3) 1) (- (quotient i 3) 1) 0) 10)))))\n\
 \n\
 (define (animate-butterflies! b t)\n\
   (for-each \n\
@@ -247,7 +247,7 @@ ret\n\
   ;; 		(parent (list-ref roots l))\n\
   ;; 		(build-plane))))))))\n\
 \n\
-  (set! butterflies (build-butterflies 10))\n\
+  (set! butterflies (build-butterflies 9))\n\
   \n\
   (clear-colour (list 0.0 0.0 0.0 0.0)))\n\
 \n\
