@@ -22,14 +22,31 @@
 	   (with-state
 	    (shader-assign-compiled "default")   
 	    (parent root)
-	    (texture (load-texture "butterfly-01.png"))
+	    (texture (load-texture "hypolaria-w-014.png"))
 	    (scale (vector 10 10 10))
 	    (hint-nozwrite)
 	    (make-butterfly
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
-	     (* (rndf) 6.2)))))
+	     (rndf)))))
+      
+      ;; build the body
+      (with-state
+       (shader-assign-compiled "default")   
+       (parent root)
+       (texture (load-texture "hypolaria-b-014.png"))
+       (scale (vector 3 10 10))
+       (hint-nozwrite)
+       (with-state
+	(translate (vector 0.24 0 0))
+	(load-primitive "models/plane.obj"))
+     
+       (with-state
+	(scale (vector -1 1 1))
+	(translate (vector 0.24 0 0))
+	(load-primitive "models/plane.obj")))
+     
       (with-primitive 
        (butterfly-left-wing ret)
        (scale (vector -1 1 1))
@@ -46,10 +63,12 @@
 (define (animate-butterfly! b t)
   (with-primitive 
    (butterfly-left-wing b)
-   (rotate (vector 0 (* 5 (sin (+ (butterfly-jitter b) (* t 10)))) 0)))
+   (identity)
+   (rotate (vector 0 (* 45 (sin (* (+ 0.1 (butterfly-jitter b)) t 10))) 0)))
   (with-primitive 
    (butterfly-right-wing b)
-   (rotate (vector 0 (* -5 (sin (+ (butterfly-jitter b) (* t 10)))) 0))))
+   (identity)
+   (rotate (vector 0 (* -45 (sin (* (+ 0.1 (butterfly-jitter b)) t 10))) 0))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -100,7 +119,8 @@
 		"shaders/unlit.vert"
 		"shaders/unlit.frag")
 
-(load-texture "butterfly.png")
+(load-texture "hypolaria-w-014.png")
+(load-texture "hypolaria-b-014.png")
 (load-texture "shrub.png")
 (load-texture "test.png")
 (load-texture "white.png")
