@@ -1,0 +1,95 @@
+;; -*- mode: scheme; -*-
+
+;; try all the rules on this character - 
+;; returns #f if none are matched
+(define (lsys-run-rules char rules)
+  (foldl
+   (lambda (rule str)
+     (if str ; if str is not #f
+         str ; then we have already found a rule, return it
+         (if (eq? char (string-ref (car rule) 0)) ; check this rule
+	     (cadr rule) ; return the string
+             #f))) ; no match
+   #f
+   rules))
+
+;; runs the lsystem rules on every character in a string, 
+;; returns the new string
+(define (lsys-search-replace str rules pos result)
+  (cond 
+   ((>= pos (string-length str)) result)
+   (else
+    (let ((ret (lsys-run-rules (string-ref str pos) rules)))
+      (if ret
+          (lsys-search-replace str rules (+ pos 1) 
+			       (string-append result ret))
+          (lsys-search-replace str rules (+ pos 1) 
+			       (string-append result (string-ref str pos))))))))
+
+;; runs the search-replace multiple (n) times on a string
+(define (ls-generate n str rules)
+  (cond 
+   ((zero? n) str)
+   (else
+    (ls-generate (- n 1) 
+		 (lsys-search-replace str rules 0 "") rules))))
+
+(define pos 0)
+
+;; builds objects from a string
+(define (ls-build string anglex angley anglez branch-scale jitter obj textures)
+  (define (ls-interpret str-list structure)
+    (cond
+     ((null? str-list) structure)
+     (else
+      (let ((char (car str-list)))
+	(cond 
+	 ((or (eq? "a" char) 
+	      (eq? "b" char) 
+	      (eq? "c" char) 	
+	      (eq? "d" char) 
+	      (eq? "e" char))
+	  (let ((obj (with-state
+		      (texture
+		       (load-texture
+			(cond
+			 ((eq? "a" char) (list-ref textures 0))
+			 ((eq? "b" char) (list-ref textures 1))
+			 ((eq? "c" char) (list-ref textures 2))
+			 ((eq? "d" char) (list-ref textures 3))
+			 ((eq? "e" char) (list-ref textures 4))
+			 ((eq? "f" char) (list-ref textures 5))
+			 (else (list-ref textures 6)))))	    
+		      (hint-nozwrite)
+		      (colour (vmul (vector 1 1 1) pos))
+		      (if (not (or (eq? "a" char) (eq? "b" char)))
+			  (scale (vmul (vector 0.3 0.3 0.3) (+ 0.5 (* (rndf) 0.5))))
+			  (scale (vector 0.3 0.3 0.3)))
+		      (rotate (vector 0 0 -90))
+		      ;;(translate (vector 0 0 pos))
+		      (set! pos (+ pos 0.002))
+		      (build-instance obj))))
+	    (translate (vector 0.5 0 0))
+	    (ls-interpret (cdr str-list) structure)))
+	 ((eq? "f" char) (translate (vector 1 0 0)) (ls-interpret (cdr str-list) structure))
+	 ((eq? "/" char) (rotate (vector anglex 0 0)) (ls-interpret (cdr str-list) structure))
+	 ((eq? "\\" char) (rotate (vector (- (+ anglex (* (crndf) jitter))) 0 0)) (ls-interpret (cdr str-list) structure))
+	 ((eq? "+" char) (rotate (vector 0 (+ angley (* (crndf) jitter)) 0)) (ls-interpret (cdr str-list) structure))
+	 ((eq? "-" char) (rotate (vector 0 (- (+ angley (* (crndf) jitter))) 0)) (ls-interpret (cdr str-list) structure))
+	 ((eq? "^" char) (rotate (vector 0 0 (+ anglez (* (crndf) jitter)))) (ls-interpret (cdr str-list) structure))
+	 ((eq? "&" char) (rotate (vector 0 0 (- (+ anglez (* (crndf) jitter))))) (ls-interpret (cdr str-list) structure))
+	 ((eq? "|" char) (rotate (vector 0 0 180)) (ls-interpret (cdr str-list) structure))
+	 ((eq? "[" char) 
+	  (let ((l (with-state 		
+		    (scale (vmul 
+			    (vector branch-scale branch-scale branch-scale)
+			    (+ 1 (* (crndf) 0.25))))
+		    (build-locator))))
+	    (push) 
+	    (identity)
+	    (parent l)
+	    (cons l (ls-interpret (cdr str-list) (cons l structure)))))
+	 ((eq? "]" char) (pop) (ls-interpret (cdr str-list) structure))
+	 (else (ls-interpret (cdr str-list) structure)))))))
+  
+  (ls-interpret  (string->list string) '()))

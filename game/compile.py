@@ -48,11 +48,20 @@ resources = [
     "textures/tree.png",
     "textures/butterfly-01.png",
 
+    "textures/plants/branch-0-00.png",
+    "textures/plants/branch-0-01.png",
+    "textures/plants/leaf-0-00.png",
+    "textures/plants/leaf-0-01.png",
+    "textures/plants/leaf-0-02.png",
+
     "textures/hypolaria-w-014.png",
     "textures/hypolaria-b-014.png",
 
     "models/plane.obj",
-    "models/flag.obj"
+    "models/lsys-plane.obj",
+    "models/flag.obj",
+
+    "scm/lsys.jscm"
 ]
 
 ################################################

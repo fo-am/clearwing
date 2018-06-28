@@ -33,7 +33,7 @@ input {
 }
 
 #webgl-canvas {
-    background: url('../textures/bg-check.png'); 
+    background: url('../textures/bg.png'); 
     position: absolute; 
     left: 0px; 
     top: 0px; 
@@ -44,10 +44,12 @@ input {
     background-size: cover;
 }
 
-#canvas2 {
+#canvas {
     position: absolute;
     left: 0px;
     top: 0px;
+    width: 100vw; 
+    height: 100vh;
 }
 
 input {

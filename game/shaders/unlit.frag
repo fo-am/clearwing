@@ -14,11 +14,11 @@ void main() {
 
     float alpha = texture2D(texture, vec2(T.s, T.t)).a;
 
-    if(alpha < 0.8) {
+    /*    if(alpha < 0.8) {
         discard;
-    }
+	}*/
 
     gl_FragColor = vec4(texture2D(texture, vec2(T.s, T.t)).xyz *
-                            DiffuseColour*C*diffuse*alpha, 
+			DiffuseColour*C*diffuse*alpha, 
                         alpha);
 }

@@ -3,78 +3,210 @@
 (load "flx/scm/fluxus.jscm")
 (load "flx/scm/canvas.jscm")
 (load "flx/scm/canvas-widgets.jscm")
+(load "scm/lsys.jscm")
 
 (define flat #f)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-butterfly root left-wing right-wing jitter)
-  (list root left-wing right-wing jitter))
+(define (make-butterfly id state pos dir root left-wing right-wing jitter t)
+  (list id state pos dir root left-wing right-wing jitter t))
 
-(define (butterfly-root b) (list-ref b 0))
-(define (butterfly-left-wing b) (list-ref b 1))
-(define (butterfly-right-wing b) (list-ref b 2))
-(define (butterfly-jitter b) (list-ref b 3))
+(define (butterfly-id b) (list-ref b 0))
+(define (butterfly-state b) (list-ref b 1))
+(define (butterfly-modify-state b v) (list-replace b 1 v))
+(define (butterfly-pos b) (list-ref b 2))
+(define (butterfly-modify-pos b v) (list-replace b 2 v))
+(define (butterfly-dir b) (list-ref b 3))
+(define (butterfly-modify-dir b v) (list-replace b 3 v))
+(define (butterfly-root b) (list-ref b 4))
+(define (butterfly-left-wing b) (list-ref b 5))
+(define (butterfly-right-wing b) (list-ref b 6))
+(define (butterfly-jitter b) (list-ref b 7))
+(define (butterfly-t b) (list-ref b 8))
+(define (butterfly-modify-t b v) (list-replace b 8 v))
 
-(define (build-butterfly pos)
-  (let ((root (with-state (translate pos) (rotate (vector 45 0 0)) (build-locator))))
+(define radians-per-degree 0.0174533)
+(define butterfly-dir-var (* radians-per-degree 20))
+
+(define (build-butterfly id pos)
+  (let ((root (build-locator)))
     (let ((ret
 	   (with-state
 	    (shader-assign-compiled "default")   
 	    (parent root)
 	    (texture (load-texture "hypolaria-w-014.png"))
 	    (scale (vector 10 10 10))
-	    (hint-nozwrite)
+	    ;;(hint-nozwrite)
 	    (make-butterfly
+	     id
+	     "none"
+	     pos
+	     (mtransform 
+	      (mrotate 
+	       (mrotate 
+		(mrotate 
+		 (midentity) 
+		 (vector 1 0 0) 
+		 (* (crndf) butterfly-dir-var)) 
+		(vector 0 1 0) 
+		(* (crndf) butterfly-dir-var)) 
+	       (vector 0 0 1) 
+	       (* (crndf) butterfly-dir-var))
+	      (vector 0 0 butterfly-speed))
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
-	     (rndf)))))
+	     (rndf) (rndf)))))
+
       
-      ;; build the body
-      (with-state
-       (shader-assign-compiled "default")   
-       (parent root)
-       (texture (load-texture "hypolaria-b-014.png"))
-       (scale (vector 3 10 10))
-       (hint-nozwrite)
+       ;; build the body
        (with-state
-	(translate (vector 0.24 0 0))
-	(load-primitive "models/plane.obj"))
-     
-       (with-state
+	(shader-assign-compiled "default")   
+	(parent root)
+	(texture (load-texture "hypolaria-b-014.png"))
+	(rotate (vector 45 0 0))
+	(scale (vector 3 10 10))
+	;;(hint-nozwrite)
+	(with-state
+	 (translate (vector 0.24 0 0))
+	 (load-primitive "models/plane.obj"))
+	
+	(with-state
+	 (scale (vector -1 1 1))
+	 (translate (vector 0.24 0 0))
+	 (load-primitive "models/plane.obj")))
+       
+       (with-primitive 
+	(butterfly-left-wing ret)
 	(scale (vector -1 1 1))
 	(translate (vector 0.24 0 0))
-	(load-primitive "models/plane.obj")))
-     
-      (with-primitive 
-       (butterfly-left-wing ret)
-       (scale (vector -1 1 1))
-       (translate (vector 0.24 0 0))
-       (apply-transform!)
-       )
-      (with-primitive 
-       (butterfly-right-wing ret)
-       (translate (vector 0.24 0 0))
-       (apply-transform!)
-       )
+	(apply-transform!)
+	)
+       (with-primitive 
+	(butterfly-right-wing ret)
+	(translate (vector 0.24 0 0))
+	(apply-transform!)
+	(rotate (vector 45 0 0))
+	)
       ret)))
 
+(define butterfly-speed 0.5)
+
+(define (generate-start-pos)
+  (vmul (vector (crndf) (crndf) -2) 100))
+
+(define (update-butterfly b)
+  (butterfly-modify-pos
+   (if (> (butterfly-t b) 1)
+       (butterfly-modify-t 
+	(butterfly-modify-pos b (generate-start-pos)) 0)
+       (butterfly-modify-t b (+ (butterfly-t b) 0.002)))
+   (vadd 
+    (butterfly-pos b)
+    (butterfly-dir b)
+    )))
+
+(define flap-speed 10)
+
 (define (animate-butterfly! b t)
-  (with-primitive 
-   (butterfly-left-wing b)
-   (identity)
-   (rotate (vector 0 (* 45 (sin (* (+ 0.1 (butterfly-jitter b)) t 10))) 0)))
-  (with-primitive 
-   (butterfly-right-wing b)
-   (identity)
-   (rotate (vector 0 (* -45 (sin (* (+ 0.1 (butterfly-jitter b)) t 10))) 0))))
+  (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
+    (let ((sa (* -3.5 (- (abs (sin a)) 0.45))))
+      (with-primitive 
+       (butterfly-root b)
+       (identity)
+       (translate (butterfly-pos b))
+       (translate (vector 0 sa 0))
+       (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
+       (rotate (vector 0 90 -90))
+       )
+      (with-primitive 
+       (butterfly-left-wing b)
+       (identity)
+       (rotate (vector 45 (* 45 sa) 0)))
+      (with-primitive 
+       (butterfly-right-wing b)
+       (identity)
+       (rotate (vector 45 (* -45 sa) 0))))))
+
+(define (butterfly-screen-pos s)
+  (project-point (butterfly-pos s)))
+
+(define (butterfly-detect-hits butterfly-list fn)
+  ;; find closest index
+  (let ((closest
+         (index-foldl
+          (lambda (i b r)
+            (let ((pos (butterfly-screen-pos b)))
+              (let ((dist (vdist (vector canvas-mouse-x canvas-mouse-y 0) pos)))
+                (if (< dist (car r))
+                    (list dist i pos b) r))))
+          (list 999999 -1 0 0)
+          butterfly-list)))
+    ;; if less than hit dist
+    (cond
+     ((< (car closest) 50)
+      ;; remove it
+      (fn butterfly-list (list-ref closest 3) (list-ref closest 2)))
+     (else butterfly-list))))
+
+(define (butterfly-hit butterflies butterfly pos)
+  (make-gobble (vx pos) (vy pos) 0 255 0 0.05)
+  (map
+   (lambda (b)
+     (if (eq? (butterfly-id butterfly) (butterfly-id b))
+	 (butterfly-modify-pos b (generate-start-pos))
+	 b))
+   butterflies))
+
+
+(define (make-gobble x y r g b s)
+  (set! gobble-x x)
+  (set! gobble-y y)
+  (set! gobble-t 0)
+  (set! gobble-r r)
+  (set! gobble-g g)
+  (set! gobble-b b)
+  (set! gobble-s s))
+
+(define gobble-x 0)
+(define gobble-y 0)
+(define gobble-t 1)
+(define gobble-r 1)
+(define gobble-g 1)
+(define gobble-b 1)
+(define gobble-s 0.2)
+
+(define (draw-gobble ctx)
+  (when (< gobble-t 1)
+        (ctx.beginPath)
+        (ctx.arc gobble-x gobble-y
+                 (* (- 1 gobble-t) 150)
+                 0 (* Math.PI 2) true)
+        (ctx.closePath)
+        (let ((grd (ctx.createRadialGradient
+                    gobble-x gobble-y (* (- 1 gobble-t) 10)
+                    gobble-x gobble-y (* (- 1 gobble-t) 150))))
+          (grd.addColorStop 0 (string-append "rgba(" gobble-r ", " gobble-g ", " gobble-b ", " 0.5 ")"))
+          (grd.addColorStop 1 (string-append "rgba(255, 255, 0, 0.0)"))
+          (set! ctx.fillStyle grd)
+          (ctx.fill))
+        (set! gobble-t (+ gobble-t gobble-s))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (build-butterflies n)
   (build-list n (lambda (i) 
-		   (build-butterfly (vmul (vector (- (modulo i 3) 1) (- (quotient i 3) 1) 0) 10)))))
+		  (build-butterfly i (vector 1000 0 0)))))
+
+(define (update-butterflies b)
+  (map
+   (lambda (b)
+     (update-butterfly b ))
+   (if canvas-mouse-clicked
+       (butterfly-detect-hits b butterfly-hit)
+       b)))
 
 (define (animate-butterflies! b t)
   (for-each 
@@ -108,6 +240,17 @@
    (cdr (reverse levels))))
 
 
+(define (animate-trees tree)
+  (for-each 
+   (lambda (tree)
+     (for-each
+      (lambda (p)
+	(with-primitive 
+	 p
+	 (rotate (vector 0 0 (* 0.1 (cos (* 1 (* 0.5 (+ 1 (modulo p 5)) (time)))))))))
+      tree))
+   trees))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; preload things
 
@@ -130,27 +273,75 @@
 (load-texture "butterfly-01.png")
 
 (load-mesh-cache "models/plane.obj")
+(load-mesh-cache "models/lsys-plane.obj")
 (load-mesh-cache "models/flag.obj")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (build-tree)
+  (crop
+   (shuffle
+    (with-state
+     (shader-assign-compiled "unlit")   
+     (translate (vector 0 -25 0))
+     (rotate (vector 0 0 90))
+     (scale (vector 20 20 20))
+     (ls-build (ls-generate 6 "A" (list 
+				   (list "A" "a[^Bd][&&d][&Ac]")
+				   (list "B" "b[^Ac][^e][&Be]")
+				   ))
+	       20 20 20 0.85 70 leaf-obj
+	       (list 
+		"plants/branch-0-00.png"
+		"plants/branch-0-01.png"
+		"plants/leaf-0-00.png"
+		"plants/leaf-0-01.png"
+		"plants/leaf-0-02.png")
+	       )))
+   30))
 
 (define (render-game)
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
 
-  (animate-butterflies! butterflies (time))
+  (set! butterflies (update-butterflies butterflies))
   
+  (animate-butterflies! butterflies (time))
+
+  (animate-trees trees)
+
+  (ctx.clearRect 0 0 screen-width screen-height)	  
+  (draw-gobble ctx)
+  
+
+
   ;;(sway-levels)
   )
 
 (define init #f)
 (define butterflies '())
+(define leaf-obj 0)
+
+(define trees '())
 
 (define (run-init)
 ;;  (set! flat (with-state (load-primitive "models/plane.obj")))
   ;;(set! plane (with-state (load-primitive "models/plane.obj")))
 
+  (canvas-setup)
+
   (clear-colour (vector 0 0 0))
+
+  (set! leaf-obj (with-state 
+		  (translate (vector 1000 0 0)) 
+		  (load-primitive "models/lsys-plane.obj")))
+  
+  (set! trees (build-list 
+	       3 
+	       (lambda (i) 
+		 (with-state
+		  (translate (vector (+ -10 (* i 10)) -6 0))
+		  (build-tree)))))
 
 ;;  (set-camera-transform 
 ;;   (mat4.rotateX  
@@ -186,12 +377,12 @@
 	  (meshes-loaded?)
 	  (textures-loaded?)
 	  (shaders-loaded?)
-	  ;;(canvas-loaded?)
+	  ;(canvas-loaded?)
 	  )
 	 (set! init #t)
 	 (run-init)	 
 	 (every-frame render-game)))
 
-(msg "Loading...")
+(ctx.fillText "Loading..." 100 100)
 (every-frame (start))
 
