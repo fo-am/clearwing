@@ -54,6 +54,11 @@ resources = [
     "textures/plants/leaf-0-01.png",
     "textures/plants/leaf-0-02.png",
 
+    "textures/plants/branch-1-00.png",
+    "textures/plants/leaf-1-00.png",
+    "textures/plants/leaf-1-01.png",
+    "textures/plants/leaf-1-02.png",
+
     "textures/hypolaria-w-014.png",
     "textures/hypolaria-b-014.png",
 

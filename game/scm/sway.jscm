@@ -37,7 +37,7 @@
 	    (parent root)
 	    (texture (load-texture "hypolaria-w-014.png"))
 	    (scale (vector 10 10 10))
-	    ;;(hint-nozwrite)
+	    (hint-nozwrite)
 	    (make-butterfly
 	     id
 	     "none"
@@ -107,7 +107,7 @@
     (butterfly-dir b)
     )))
 
-(define flap-speed 10)
+(define flap-speed 5)
 
 (define (animate-butterfly! b t)
   (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
@@ -300,6 +300,27 @@
 	       )))
    30))
 
+(define (build-tree2)
+  (crop
+   (shuffle
+    (with-state
+     (shader-assign-compiled "unlit")   
+     (translate (vector 0 -25 0))
+     (rotate (vector 0 0 90))
+     (scale (vector 20 20 20))
+     (ls-build (ls-generate 6 "A" (list 
+				   (list "A" "a[^Ad][&&b][&Ac]")
+				   ))
+	       20 20 20 0.85 70 leaf-obj
+	       (list 
+		"plants/branch-1-00.png"
+		"plants/leaf-1-00.png"
+		"plants/leaf-1-01.png"
+		"plants/leaf-1-02.png")
+	       )))
+   30))
+
+
 (define (render-game)
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
@@ -336,12 +357,20 @@
 		  (translate (vector 1000 0 0)) 
 		  (load-primitive "models/lsys-plane.obj")))
   
-  (set! trees (build-list 
-	       3 
-	       (lambda (i) 
-		 (with-state
-		  (translate (vector (+ -10 (* i 10)) -6 0))
-		  (build-tree)))))
+  (set! trees (list
+  	       (with-state
+  		(translate (vector -10 -6 0))
+  		(build-tree))
+  	       (with-state
+  		(translate (vector 0 -6 0))
+  		(build-tree))
+  	       (with-state
+  		(translate (vector 10 -6 0))
+  		(build-tree))
+  	       (with-state
+  		(scale (vector 0.5 0.5 0.5))
+  		(translate (vector 25 -10 0))
+  		(build-tree2))))
 
 ;;  (set-camera-transform 
 ;;   (mat4.rotateX  
@@ -383,6 +412,9 @@
 	 (run-init)	 
 	 (every-frame render-game)))
 
+(resize-glcanvas webgl-canvas)
+(resize-canvas canvas)
+(Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
 (every-frame (start))
 
