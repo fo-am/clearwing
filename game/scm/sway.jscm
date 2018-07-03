@@ -107,7 +107,7 @@
     (butterfly-dir b)
     )))
 
-(define flap-speed 5)
+(define flap-speed 8)
 
 (define (animate-butterfly! b t)
   (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
