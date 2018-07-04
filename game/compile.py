@@ -66,7 +66,8 @@ resources = [
     "models/lsys-plane.obj",
     "models/flag.obj",
 
-    "scm/lsys.jscm"
+    "scm/lsys.jscm",
+    "scm/local-storage.jscm"
 ]
 
 ################################################

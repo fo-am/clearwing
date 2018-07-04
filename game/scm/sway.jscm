@@ -4,8 +4,23 @@
 (load "flx/scm/canvas.jscm")
 (load "flx/scm/canvas-widgets.jscm")
 (load "scm/lsys.jscm")
+(load "scm/local-storage.jscm")
 
 (define flat #f)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define current-butterfly-id 0)
+
+(define (butterfly-generate-id)
+  (let ((r current-butterfly-id))
+    (set! current-butterfly-id (+ current-butterfly-id 1))
+    r))
+
+(define (advance-session-id)
+  (local-set-param 
+   "clearwing" "session-id" 
+   (+ (local-get-param "clearwing" "session-id") 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -13,6 +28,7 @@
   (list id state pos dir root left-wing right-wing jitter t))
 
 (define (butterfly-id b) (list-ref b 0))
+(define (butterfly-modify-id b v) (list-replace b 0 v))
 (define (butterfly-state b) (list-ref b 1))
 (define (butterfly-modify-state b v) (list-replace b 1 v))
 (define (butterfly-pos b) (list-ref b 2))
@@ -29,7 +45,7 @@
 (define radians-per-degree 0.0174533)
 (define butterfly-dir-var (* radians-per-degree 20))
 
-(define (build-butterfly id pos)
+(define (build-butterfly pos)
   (let ((root (build-locator)))
     (let ((ret
 	   (with-state
@@ -39,7 +55,7 @@
 	    (scale (vector 10 10 10))
 	    (hint-nozwrite)
 	    (make-butterfly
-	     id
+	     (butterfly-generate-id)
 	     "none"
 	     pos
 	     (mtransform 
@@ -150,13 +166,26 @@
       (fn butterfly-list (list-ref closest 3) (list-ref closest 2)))
      (else butterfly-list))))
 
+
 (define (butterfly-hit butterflies butterfly pos)
   (make-gobble (vx pos) (vy pos) 0 255 0 0.05)
   (map
    (lambda (b)
-     (if (eq? (butterfly-id butterfly) (butterfly-id b))
-	 (butterfly-modify-pos b (generate-start-pos))
-	 b))
+     (cond 
+      ((eq? (butterfly-id butterfly) (butterfly-id b))       
+       (local-add-item 
+	"clearwing" 
+	(string-append "hits-" (local-get-param "clearwing" "session-id"))
+	(list
+	 (local-get-param "clearwing" "session-id")
+	 (butterfly-id b)
+	 pos
+	 ;; etc
+	 ))
+       (butterfly-modify-pos 
+	(butterfly-modify-id b (butterfly-generate-id))
+	(generate-start-pos)))
+      (else b)))
    butterflies))
 
 
@@ -197,8 +226,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (build-butterflies n)
-  (build-list n (lambda (i) 
-		  (build-butterfly i (vector 1000 0 0)))))
+  (build-list n (lambda (_) 
+		  (build-butterfly (vector 1000 0 0)))))
 
 (define (update-butterflies b)
   (map
@@ -358,15 +387,15 @@
 		  (load-primitive "models/lsys-plane.obj")))
   
   (set! trees (list
-  	       (with-state
-  		(translate (vector -10 -6 0))
-  		(build-tree))
-  	       (with-state
-  		(translate (vector 0 -6 0))
-  		(build-tree))
-  	       (with-state
-  		(translate (vector 10 -6 0))
-  		(build-tree))
+  	       ;; (with-state
+  	       ;; 	(translate (vector -10 -6 0))
+  	       ;; 	(build-tree))
+  	       ;; (with-state
+  	       ;; 	(translate (vector 0 -6 0))
+  	       ;; 	(build-tree))
+  	       ;; (with-state
+  	       ;; 	(translate (vector 10 -6 0))
+  	       ;; 	(build-tree))
   	       (with-state
   		(scale (vector 0.5 0.5 0.5))
   		(translate (vector 25 -10 0))
@@ -416,5 +445,24 @@
 (resize-canvas canvas)
 (Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
+
+;;(local-nuke)
+
+(local-setup-params 
+ "clearwing" 
+ (list
+  (list "session-id" 0)
+  (list "foo" 100)
+  (list "bar" 0.2)
+  (list "baz" 0.3)))
+
+(advance-session-id)
+
+(define (set-game-param key value)
+  (local-set-param "clearwing" key value)
+  (msg key)(msg value))
+
+(msg (local-get-param "clearwing" "foo"))
+
 (every-frame (start))
 

@@ -1,0 +1,61 @@
+;; -*- mode: scheme; -*-
+
+;; use browser local storage for stuff
+;; hopefully removing the need for a server in certain situations
+
+(define (local-save name o)
+  (localStorage.setItem name (JSON.stringify o)))
+
+(define (local-load name)
+  (JSON.parse (localStorage.getItem name)))
+
+(define (local-nuke)
+  (localStorage.clear))
+
+(define (local-exists? name)
+  (localStorage.getItem name))
+
+(define (param-form key value)
+  (string-append
+   "<div class='param-edit'>
+          " key "
+          <input class='txt' onChange='set_game_param(this.name,this.value);' type='text' name='" key "' value='" value "'></br>
+    </div>"))
+
+(define (setup-params-interface params)
+  (let ((c ($ ".param-list") ))
+    (for-each
+     (lambda (m)
+       (c.append (param-form (car m) (cadr m))))
+     params)))
+
+(define (local-setup-params namespace params)
+  (when (not (local-exists? (string-append namespace "-params")))
+	(msg "new params")
+	(local-save (string-append namespace "-params") params))
+  (setup-params-interface (local-load (string-append namespace "-params"))))
+
+(define (local-set-param namespace name value)
+  (local-save
+   (string-append namespace "-params")
+   (map
+    (lambda (kv)
+      (if (eq? (car kv) name)
+	  (list name value)
+	  kv))
+    (local-load (string-append namespace "-params")))))
+
+(define (local-get-param namespace name)
+   (foldl
+    (lambda (kv r)
+      (if (eq? (car kv) name)
+	  (cadr kv) r))
+    #f
+    (local-load (string-append namespace "-params"))))
+
+;; used for streaming data, not params
+(define (local-add-item namespace name value)
+  (let ((fullname (string-append namespace "-" name)))
+    (let ((arr (local-load fullname)))
+      (local-save fullname (append (if arr (local-load fullname) '()) value)))))
+
