@@ -247,22 +247,13 @@
    b))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (shuffle-background)
+  (let ((img (choose (list "images/bg-01.jpg"
+			   "images/bg-02.jpg"
+			   "images/bg-03.jpg"))))
+    (js "$('#webgl-canvas').css('background-image', 'url('+img+')');")))
   
-(define layer-textures (list "tree.png" "shrub.png" "grass.png"))
-(define colours (list (vector 0.1 0.1 0.1) (vector 0.2 0.2 0.2) (vector 0.3 0.3 0.3)))
-
-(define (sway-levels)
-  (for-each
-   (lambda (level)
-     (for-each
-      (lambda (p)
-	(with-primitive 
-	 p
-	 (rotate (vector 0 0 (* 0.02 (sin (+ p (time))))))))
-      level))
-   (cdr (reverse levels))))
-
-
 (define (animate-trees tree)
   (for-each 
    (lambda (tree)
@@ -390,6 +381,7 @@
     (clear-colour (list 0.0 0.0 0.0 0.0)))
 
    ((eq? game-mode "game")
+    (shuffle-background)
     (set! quit-locator (with-state (translate (vector 18 -10 0)) (build-locator)))
     (set! start-button (make-prim-button quit-locator
 					 20 "Quit"
@@ -437,7 +429,7 @@
 (resize-canvas canvas)
 (Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
-
+(shuffle-background)
 (advance-session-id)
 
 (every-frame (start))
