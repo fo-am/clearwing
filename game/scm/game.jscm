@@ -1,16 +1,17 @@
 ;; -*- mode: scheme; -*-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (load "flx/scm/fluxus.jscm")
 (load "flx/scm/canvas.jscm")
 (load "flx/scm/canvas-widgets.jscm")
 (load "scm/lsys.jscm")
-(load "scm/local-storage.jscm")
-
-(define flat #f)
+(load "scm/admin.jscm")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define current-butterfly-id 0)
+(define flap-speed (local-get-param "clearwing" "Flap Speed"))
+(define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -19,8 +20,8 @@
 
 (define (advance-session-id)
   (local-set-param 
-   "clearwing" "session-id" 
-   (+ (local-get-param "clearwing" "session-id") 1)))
+   "clearwing" "Session ID" 
+   (+ (local-get-param "clearwing" "Session ID") 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -107,7 +108,6 @@
 	)
       ret)))
 
-(define butterfly-speed 0.5)
 
 (define (generate-start-pos)
   (vmul (vector (crndf) (crndf) -2) 100))
@@ -123,7 +123,6 @@
     (butterfly-dir b)
     )))
 
-(define flap-speed 8)
 
 (define (animate-butterfly! b t)
   (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
@@ -175,9 +174,9 @@
       ((eq? (butterfly-id butterfly) (butterfly-id b))       
        (local-add-item 
 	"clearwing" 
-	(string-append "hits-" (local-get-param "clearwing" "session-id"))
+	(string-append "hits-" (local-get-param "clearwing" "Session ID"))
 	(list
-	 (local-get-param "clearwing" "session-id")
+	 (local-get-param "clearwing" "Session ID")
 	 (butterfly-id b)
 	 (vx pos) 
 	 (vy pos)
@@ -245,18 +244,9 @@
    b))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (build-plane)
-  (with-state
-   (shader-assign-compiled "unlit")   
-   (scale (vector 30 30 30))
-   (build-instance flat)))
   
 (define layer-textures (list "tree.png" "shrub.png" "grass.png"))
 (define colours (list (vector 0.1 0.1 0.1) (vector 0.2 0.2 0.2) (vector 0.3 0.3 0.3)))
-
-(define roots #f)
-(define levels #f)
 
 (define (sway-levels)
   (for-each
@@ -304,7 +294,6 @@
 
 (load-mesh-cache "models/plane.obj")
 (load-mesh-cache "models/lsys-plane.obj")
-(load-mesh-cache "models/flag.obj")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -350,24 +339,14 @@
 	       )))
    30))
 
-
 (define (render-game)
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
-
   (set! butterflies (update-butterflies butterflies))
-  
   (animate-butterflies! butterflies (time))
-
   (animate-trees trees)
-
   (ctx.clearRect 0 0 screen-width screen-height)	  
-  (draw-gobble ctx)
-  
-
-
-  ;;(sway-levels)
-  )
+  (draw-gobble ctx))
 
 (define init #f)
 (define butterflies '())
@@ -376,17 +355,12 @@
 (define trees '())
 
 (define (run-init)
-;;  (set! flat (with-state (load-primitive "models/plane.obj")))
-  ;;(set! plane (with-state (load-primitive "models/plane.obj")))
-
   (canvas-setup)
-
   (clear-colour (vector 0 0 0))
-
   (set! leaf-obj (with-state 
 		  (translate (vector 1000 0 0)) 
 		  (load-primitive "models/lsys-plane.obj")))
-  
+
   (set! trees (list
   	       ;; (with-state
   	       ;; 	(translate (vector -10 -6 0))
@@ -401,33 +375,8 @@
   		(scale (vector 0.5 0.5 0.5))
   		(translate (vector 25 -10 0))
   		(build-tree2))))
-
-;;  (set-camera-transform 
-;;   (mat4.rotateX  
-;;    (mat4.translate (camera-transform) (vector 0 0 -7))
-;;    (* 0.5 Math.PI)))
-  
-  (set! roots (build-list 3 (lambda (_) (build-locator))))
-
-  ;; (set! levels 
-  ;; 	(with-state
-  ;; 	 (translate (vector -42 -10 -3))
-  ;; 	 (build-list
-  ;; 	  3
-  ;; 	  (lambda (l)
-  ;; 	    (translate (vector 0 4 0))
-  ;; 	    (build-list
-  ;; 	     5
-  ;; 	     (lambda (i)
-  ;; 	       (with-state
-  ;; 		(translate (vector (* i (+ 20 (* (crndf) 5))) 0 0))
-  ;; 		(texture (load-texture (list-ref layer-textures l)))
-  ;; 		(colour (list-ref colours l))
-  ;; 		(parent (list-ref roots l))
-  ;; 		(build-plane))))))))
-
-  (set! butterflies (build-butterflies 9))
-  
+ 
+  (set! butterflies (build-butterflies 9))  
   (clear-colour (list 0.0 0.0 0.0 0.0)))
 
 (define (start)
@@ -442,38 +391,14 @@
 	 (run-init)	 
 	 (every-frame render-game)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (resize-glcanvas webgl-canvas)
 (resize-canvas canvas)
 (Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
 
-;;(local-nuke)
-
-(local-setup-params 
- "clearwing" 
- (list
-  (list "session-id" 0)
-  (list "foo" 100)
-  (list "bar" 0.2)
-  (list "baz" 0.3)))
-
 (advance-session-id)
-
-(define (get-data-as-csv)
-  (define (_ n max r)
-    (cond 
-     ((eq? n max) r)
-     (else
-      (if (local-exists? (string-append "clearwing-" (string-append "hits-" n)))
-	  (_ (+ n 1) max 
-	     (string-append
-	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
-	  (_ (+ n 1) max r)))))
-  (dbg (_ 0 (local-get-param "clearwing" "session-id") 
-	  "session, butterfly-id, mouse-x, mouse-y \\n")))
-
-(define (set-game-param key value)
-  (local-set-param "clearwing" key value))
 
 (every-frame (start))
 

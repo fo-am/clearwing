@@ -17,10 +17,18 @@
         <div class="morph-list-edible"></div>
 	<h2>Game parameters</h2>
         <div class="param-list"></div>
+	<div class='row'>
+	  <div class='col-12'>
+	    <button class='col-4 offset-4' onclick="local_nuke();">Factory settings</button>
+	  </div>
+	</div>
 	<h2>Data</h2>
-
-	<button onclick="download_data('clearwing.csv',get_data_as_csv());">Save data</button>
-
+	<div class='row'>
+	  <div class='col-12'>
+	    <button class='col-4 offset-4' onclick="clear_data();">Clear data</button>
+	    <button class='col-4 offset-4' onclick="download_data('clearwing.csv',get_data_as_csv());">Save data</button>
+	  </div>
+	</div>
       </div>
 
       <div class="code-container" style="display: none;">

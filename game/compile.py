@@ -63,7 +63,8 @@ resources = [
     "models/flag.obj",
 
     "scm/lsys.jscm",
-    "scm/local-storage.jscm"
+    "scm/local-storage.jscm",
+    "scm/admin.jscm"
 ]
 
 ################################################
@@ -107,5 +108,5 @@ def comp(code,target,pre):
 
 ###################################################
 
-comp(["scm/sway.jscm"], "index.html","index-pre.html")
+comp(["scm/game.jscm"], "index.html","index-pre.html")
 comp(["scm/admin.jscm"], "admin.html","admin-pre.html")

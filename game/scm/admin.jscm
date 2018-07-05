@@ -3,16 +3,6 @@
 (load "flx/scm/base.jscm")
 (load "scm/local-storage.jscm")
 
-(local-setup-params 
- "clearwing" 
- (list
-  (list "session-id" 0)
-  (list "foo" 100)
-  (list "bar" 0.2)
-  (list "baz" 0.3)))
-
-;;(local-nuke)
-
 (define (get-data-as-csv)
   (define (_ n max r)
     (cond 
@@ -23,12 +13,15 @@
 	     (string-append
 	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
 	  (_ (+ n 1) max r)))))
-  (dbg (_ 0 (local-get-param "clearwing" "session-id") 
+  (dbg (_ 0 (local-get-param "clearwing" "Session ID") 
 	  "session, butterfly-id, mouse-x, mouse-y \\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
-
-
-(define (crank) 0)
+(local-setup-params 
+ "clearwing" 
+ (list
+  (list "Session ID" 0)
+  (list "Butterfly Speed" 0.5)
+  (list "Flap Speed" 8)))
