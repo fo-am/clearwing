@@ -3,13 +3,9 @@ import base64
 
 # stuff all the scheme code into the ditto js file
 # so that it can be loaded locally
-
-pre = "index-pre.html"
-target = "index.html"
  
 # more time and I would go through searching for loads to
 # do this automatically - todo
-code = ["scm/sway.jscm"]
 
 resources = [ 
     "flx/scm/base.jscm",
@@ -100,15 +96,16 @@ def build_resources(resource_files):
             res[fn]=load_from_file(fn)
     return json.dumps(res)
 
+def comp(code,target,pre):
+    pre_data=load_from_file(pre)
+    target_data=pre_data
+    target_data=insert_code(target_data,"{{SYNTAX}}",load_from_file("flx/scm/syntax.jscm"))
+    target_data=insert_code(target_data,"{{CODE}}",load_from_files(code))
+    target_data=insert_code(target_data,"{{RESOURCES}}",build_resources(resources))
+    with open(target, 'w') as myfile:
+        myfile.write(target_data)
+
 ###################################################
 
-pre_data=load_from_file(pre)
-target_data=pre_data
-
-target_data=insert_code(target_data,"{{SYNTAX}}",load_from_file("flx/scm/syntax.jscm"))
-target_data=insert_code(target_data,"{{CODE}}",load_from_files(code))
-target_data=insert_code(target_data,"{{RESOURCES}}",build_resources(resources))
-
-with open(target, 'w') as myfile:
-    myfile.write(target_data)
-
+comp(["scm/sway.jscm"], "index.html","index-pre.html")
+comp(["scm/admin.jscm"], "admin.html","admin-pre.html")

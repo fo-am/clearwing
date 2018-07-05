@@ -1,0 +1,34 @@
+;; -*- mode: scheme; -*-
+
+(load "flx/scm/base.jscm")
+(load "scm/local-storage.jscm")
+
+(local-setup-params 
+ "clearwing" 
+ (list
+  (list "session-id" 0)
+  (list "foo" 100)
+  (list "bar" 0.2)
+  (list "baz" 0.3)))
+
+;;(local-nuke)
+
+(define (get-data-as-csv)
+  (define (_ n max r)
+    (cond 
+     ((eq? n max) r)
+     (else
+      (if (local-exists? (string-append "clearwing-" (string-append "hits-" n)))
+	  (_ (+ n 1) max 
+	     (string-append
+	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
+	  (_ (+ n 1) max r)))))
+  (dbg (_ 0 (local-get-param "clearwing" "session-id") 
+	  "session, butterfly-id, mouse-x, mouse-y \\n")))
+
+(define (set-game-param key value)
+  (local-set-param "clearwing" key value))
+
+
+
+(define (crank) 0)

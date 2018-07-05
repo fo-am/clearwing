@@ -1,22 +1,3 @@
-@import url('https://fonts.googleapis.com/css?family=Barrio|Comfortaa|Josefin+Sans');
-
-body {
-    font-family: 'Comfortaa', cursive;
-    font-size: 150%;
-}
-
-h1 {
-}
-
-input {
-    width: 12em;
-}
-
-.image-button {
-    text-align: center;
-    padding-bottom: 1em;
-}
-
 .code-container {
     position: absolute;
     left: 0px;
@@ -64,20 +45,6 @@ input {
     z-index: 999;
     width: 100%;
     background: rgba(255,255,255,0.5);
-}
-
-
-input {
-    width: 3em;
-}
-
-.zoomed-canvas {
-    width:100%; 
-    height:auto; 
-    position:fixed; 
-    left:0; 
-    top:0; 
-    z-index:-100; 
 }
 
 input[type=number]::-webkit-inner-spin-button, 

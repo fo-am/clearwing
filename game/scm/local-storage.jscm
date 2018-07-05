@@ -17,9 +17,13 @@
 
 (define (param-form key value)
   (string-append
-   "<div class='param-edit'>
-          " key "
-          <input class='txt' onChange='set_game_param(this.name,this.value);' type='text' name='" key "' value='" value "'></br>
+   "<div class='row'>
+      <div class='col-6 offset-3'>
+        <div class='row param-edit'>
+           <div class='col-9'>" key "</div>
+           <input class='col-3 txt' onChange='set_game_param(this.name,this.value);' type='text' name='" key "' value='" value "'></br>
+        </div>
+      </div>
     </div>"))
 
 (define (setup-params-interface params)
