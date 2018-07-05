@@ -31,7 +31,6 @@
 
 (define (local-setup-params namespace params)
   (when (not (local-exists? (string-append namespace "-params")))
-	(msg "new params")
 	(local-save (string-append namespace "-params") params))
   (setup-params-interface (local-load (string-append namespace "-params"))))
 
@@ -57,5 +56,39 @@
 (define (local-add-item namespace name value)
   (let ((fullname (string-append namespace "-" name)))
     (let ((arr (local-load fullname)))
-      (local-save fullname (append (if arr (local-load fullname) '()) value)))))
+      (local-save fullname (append (if arr (local-load fullname) '()) (list value))))))
 
+
+;; utils
+
+(define (unknown->csv l)
+  (cond
+   ((number? l) l)
+   ((string? l) (string-append "'" l "'"))
+   ((list? l) 
+    (car
+     (foldl
+      (lambda (i r)
+	(let ((pos (cadr r)))
+	  (list 
+	   (if (< pos (- (length l) 1)) 
+	       (string-append (car r) (unknown->csv i) (if (list? i) "" ","))
+	       (string-append (car r) (unknown->csv i) "\n"))
+	   (+ pos 1))))
+      (list "" 0) l)))
+   (else (msg "unknown-csv no idea what") (msg l) (msg "is..."))))
+
+(define (local->csv namespace name) 
+  (unknown->csv (local-load (string-append namespace "-" name))))
+
+(define (download-data filename text) 
+  (let ((element (document.createElement "a")))
+    (element.setAttribute 
+     "href" 
+     (string-append "data:text/plain;charset=utf-8," 
+		    (encodeURIComponent text))
+     (element.setAttribute "download" filename))
+    (set! element.style.display "none")
+    (document.body.appendChild element)
+    (element.click)
+    (document.body.removeChild element)))

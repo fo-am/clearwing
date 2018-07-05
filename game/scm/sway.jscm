@@ -179,7 +179,8 @@
 	(list
 	 (local-get-param "clearwing" "session-id")
 	 (butterfly-id b)
-	 pos
+	 (vx pos) 
+	 (vy pos)
 	 ;; etc
 	 ))
        (butterfly-modify-pos 
@@ -458,11 +459,21 @@
 
 (advance-session-id)
 
-(define (set-game-param key value)
-  (local-set-param "clearwing" key value)
-  (msg key)(msg value))
+(define (get-data-as-csv)
+  (define (_ n max r)
+    (cond 
+     ((eq? n max) r)
+     (else
+      (if (local-exists? (string-append "clearwing-" (string-append "hits-" n)))
+	  (_ (+ n 1) max 
+	     (string-append
+	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
+	  (_ (+ n 1) max r)))))
+  (dbg (_ 0 (local-get-param "clearwing" "session-id") 
+	  "session, butterfly-id, mouse-x, mouse-y \\n")))
 
-(msg (local-get-param "clearwing" "foo"))
+(define (set-game-param key value)
+  (local-set-param "clearwing" key value))
 
 (every-frame (start))
 

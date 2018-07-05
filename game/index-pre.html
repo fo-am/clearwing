@@ -10,18 +10,23 @@
     
     <body style="color:#594430; background:#000;">
       <div>
-        <canvas class="canvas" id="webgl-canvas"></canvas>
+	<button id="showhide_button">Admin</button>
+        
+	<canvas class="canvas" id="webgl-canvas"></canvas>
         <canvas class="canvas" id="canvas"></canvas>
 
-<!--	<div class="settings">
+	<div class="settings" id="settings">
 	  <h1>Butterfly Command Centre</h1>
           <h2>Morph selection</h2>
           <div class="morph-list-edible"></div>
 	  <h2>Game parameters</h2>
           <div class="param-list"></div>
-	  <h2>Database commands</h2>
+	  <h2>Data</h2>
+
+	  <button onclick="download_data('clearwing.csv',get_data_as_csv());">Save data</button>
+
 	</div>
--->
+
 	<div class="code-container" style="display: none;">
 	  <button onclick="hide_code();">Hide code</button>
 	  <button onclick="run_code();">Run me</button>
@@ -39,6 +44,10 @@
     <script src="flx/js/ditto.js"></script>
 
     <script>
+      $("#showhide_button").click(function(){
+        $("#settings").toggle(1000);
+      }); 
+
       $( document ).ready(function() {
       init_resources({{RESOURCES}});
       init_static('{{SYNTAX}}','{{CODE}}');    

@@ -50,16 +50,20 @@ input {
     height: 100vh;
 }
 
+#showhide_button {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 1000;
+}
+
 .settings {
     position: absolute;
     left: 0px;
-    top: 1.2em;
-    font-size: 100%;
-    border: 0;
-    color: #000;
-    background-color: transparent;
+    top: 0px;
     z-index: 999;
     width: 100%;
+    background: rgba(255,255,255,0.5);
 }
 
 
