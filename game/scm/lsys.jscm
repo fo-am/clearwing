@@ -34,10 +34,9 @@
     (ls-generate (- n 1) 
 		 (lsys-search-replace str rules 0 "") rules))))
 
-(define pos 0)
-
 ;; builds objects from a string
-(define (ls-build string anglex angley anglez branch-scale jitter obj textures)
+(define (ls-build string anglex angley anglez branch-scale jitter obj textures col)
+  (define pos 0)
   (define (ls-interpret str-list structure)
     (cond
      ((null? str-list) structure)
@@ -61,7 +60,7 @@
 			 ((eq? "f" char) (list-ref textures 5))
 			 (else (list-ref textures 6)))))	    
 		      (hint-nozwrite)
-		      (colour (vmul (vector 1 1 1) pos))
+		      (colour col)
 		      (if (not (or (eq? "a" char) (eq? "b" char)))
 			  (scale (vmul (vector 0.3 0.3 0.3) (+ 0.5 (* (rndf) 0.5))))
 			  (scale (vector 0.3 0.3 0.3)))

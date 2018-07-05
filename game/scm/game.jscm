@@ -9,6 +9,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define game-mode "loading")
 (define current-butterfly-id 0)
 (define flap-speed (local-get-param "clearwing" "Flap Speed"))
 (define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
@@ -45,6 +46,9 @@
 
 (define radians-per-degree 0.0174533)
 (define butterfly-dir-var (* radians-per-degree 20))
+
+(define (destroy-butterfly b)
+  (destroy (butterfly-root b)))
 
 (define (build-butterfly pos)
   (let ((root (build-locator)))
@@ -122,7 +126,6 @@
     (butterfly-pos b)
     (butterfly-dir b)
     )))
-
 
 (define (animate-butterfly! b t)
   (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
@@ -316,7 +319,7 @@
 		"plants/leaf-0-00.png"
 		"plants/leaf-0-01.png"
 		"plants/leaf-0-02.png")
-	       )))
+	       (vector 1 1 1))))
    30))
 
 (define (build-tree2)
@@ -336,48 +339,84 @@
 		"plants/leaf-1-00.png"
 		"plants/leaf-1-01.png"
 		"plants/leaf-1-02.png")
-	       )))
+	       (vector 1 1 1))))
    30))
 
 (define (render-game)
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
-  (set! butterflies (update-butterflies butterflies))
-  (animate-butterflies! butterflies (time))
-  (animate-trees trees)
-  (ctx.clearRect 0 0 screen-width screen-height)	  
-  (draw-gobble ctx))
+  (cond
+   ((eq? game-mode "title")
+    (prim-button-update start-button 0)    
+    (animate-butterfly! button-butterfly (time))
+    (ctx.clearRect 0 0 screen-width screen-height)	  
+    (set! ctx.fillStyle "#fff")
+    (ctx.fillText "Clearwing Butterfly Game" 100 100)
+    (prim-button-render! start-button)
+    0)
+   ((eq? game-mode "game")
+    (prim-button-update start-button 0)    
+    (set! butterflies (update-butterflies butterflies))
+    (animate-butterflies! butterflies (time))
+    (animate-trees trees)
+    (ctx.clearRect 0 0 screen-width screen-height)	  
+    (draw-gobble ctx)
+    (prim-button-render! start-button))
+   (else 0)))
 
 (define init #f)
 (define butterflies '())
 (define leaf-obj 0)
+(define tree-root 0)
 
 (define trees '())
 
 (define (run-init)
-  (canvas-setup)
-  (clear-colour (vector 0 0 0))
-  (set! leaf-obj (with-state 
-		  (translate (vector 1000 0 0)) 
-		  (load-primitive "models/lsys-plane.obj")))
+  (cond 
+   ((eq? game-mode "title")
+    (canvas-setup)
+    (clear-colour (vector 0 0 0))
+    (set! game-root (build-locator))
+    (set! leaf-obj (with-state 
+		    (translate (vector 1000 0 0)) 
+		    (load-primitive "models/lsys-plane.obj")))
 
-  (set! trees (list
-  	       ;; (with-state
-  	       ;; 	(translate (vector -10 -6 0))
-  	       ;; 	(build-tree))
-  	       ;; (with-state
-  	       ;; 	(translate (vector 0 -6 0))
-  	       ;; 	(build-tree))
-  	       ;; (with-state
-  	       ;; 	(translate (vector 10 -6 0))
-  	       ;; 	(build-tree))
-  	       (with-state
-  		(scale (vector 0.5 0.5 0.5))
-  		(translate (vector 25 -10 0))
-  		(build-tree2))))
- 
-  (set! butterflies (build-butterflies 9))  
-  (clear-colour (list 0.0 0.0 0.0 0.0)))
+    (set! button-butterfly (build-butterfly (vector 0 0 0)))
+    (set! start-button (make-prim-button button-butterfly 20 "Play"
+					 (lambda ()
+					   (destroy-butterfly button-butterfly)
+					   (set! game-mode "game")
+					   (run-init))))
+    (clear-colour (list 0.0 0.0 0.0 0.0)))
+
+   ((eq? game-mode "game")
+    (set! quit-locator (with-state (translate (vector 18 -10 0)) (build-locator)))
+    (set! start-button (make-prim-button quit-locator
+					 20 "Quit"
+					 (lambda ()
+					   (destroy game-root)
+					   (destroy quit-locator)
+					   (set! game-mode "title")
+					   (run-init))))
+    (with-state
+     (parent game-root)
+     (set! trees (list
+		 ;; (with-state
+		 ;; 	(translate (vector -10 -6 0))
+		 ;; 	(build-tree))
+		 ;; (with-state
+		 ;; 	(translate (vector 0 -6 0))
+		 ;; 	(build-tree))
+		 ;; (with-state
+		 ;; 	(translate (vector 10 -6 0))
+		 ;; 	(build-tree))
+		 (with-state
+		  (scale (vector 0.5 0.5 0.5))
+		  (translate (vector 25 -10 0))
+		  (build-tree2))))
+     (set! butterflies (build-butterflies 9))))
+
+   (else 0)))
 
 (define (start)
   (when  (and
@@ -388,6 +427,7 @@
 	  ;(canvas-loaded?)
 	  )
 	 (set! init #t)
+	 (set! game-mode "title")
 	 (run-init)	 
 	 (every-frame render-game)))
 
