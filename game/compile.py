@@ -57,6 +57,10 @@ resources = [
 
     "textures/hypolaria-w-014.png",
     "textures/hypolaria-b-014.png",
+    "textures/hypothyris-w-017.png",
+    "textures/hypothyris-b-017.png",
+    "textures/ithomia-w-013.png",
+    "textures/ithomia-b-013.png",
 
     "models/plane.obj",
     "models/lsys-plane.obj",

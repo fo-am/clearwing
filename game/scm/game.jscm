@@ -26,23 +26,25 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-butterfly id state pos dir root left-wing right-wing jitter t)
-  (list id state pos dir root left-wing right-wing jitter t))
+(define (make-butterfly id type state pos dir root left-wing right-wing jitter t)
+  (list id type state pos dir root left-wing right-wing jitter t))
 
 (define (butterfly-id b) (list-ref b 0))
 (define (butterfly-modify-id b v) (list-replace b 0 v))
-(define (butterfly-state b) (list-ref b 1))
-(define (butterfly-modify-state b v) (list-replace b 1 v))
-(define (butterfly-pos b) (list-ref b 2))
-(define (butterfly-modify-pos b v) (list-replace b 2 v))
-(define (butterfly-dir b) (list-ref b 3))
-(define (butterfly-modify-dir b v) (list-replace b 3 v))
-(define (butterfly-root b) (list-ref b 4))
-(define (butterfly-left-wing b) (list-ref b 5))
-(define (butterfly-right-wing b) (list-ref b 6))
-(define (butterfly-jitter b) (list-ref b 7))
-(define (butterfly-t b) (list-ref b 8))
-(define (butterfly-modify-t b v) (list-replace b 8 v))
+(define (butterfly-type b) (list-ref b 1))
+(define (butterfly-modify-type b v) (list-replace b 1 v))
+(define (butterfly-state b) (list-ref b 2))
+(define (butterfly-modify-state b v) (list-replace b 2 v))
+(define (butterfly-pos b) (list-ref b 3))
+(define (butterfly-modify-pos b v) (list-replace b 3 v))
+(define (butterfly-dir b) (list-ref b 4))
+(define (butterfly-modify-dir b v) (list-replace b 4 v))
+(define (butterfly-root b) (list-ref b 5))
+(define (butterfly-left-wing b) (list-ref b 6))
+(define (butterfly-right-wing b) (list-ref b 7))
+(define (butterfly-jitter b) (list-ref b 8))
+(define (butterfly-t b) (list-ref b 9))
+(define (butterfly-modify-t b v) (list-replace b 9 v))
 
 (define radians-per-degree 0.0174533)
 (define butterfly-dir-var (* radians-per-degree 20))
@@ -50,18 +52,28 @@
 (define (destroy-butterfly b)
   (destroy (butterfly-root b)))
 
+(define (choose-type)
+  (choose 
+   (list
+    (list "hypolaria" "014")
+    (list "hypothyris" "017")
+    (list "ithomia" "013")
+    )))
+
 (define (build-butterfly pos)
-  (let ((root (build-locator)))
+  (let ((root (build-locator))
+	(type (choose-type)))
     (let ((ret
 	   (with-state
 	    (shader-assign-compiled "default")   
 	    (parent root)
-	    (texture (load-texture "hypolaria-w-014.png"))
+	    (texture (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
 	    (scale (vector 10 10 10))
 	    (hint-nozwrite)
 	    (make-butterfly
 	     (butterfly-generate-id)
 	     "none"
+	     type
 	     pos
 	     (mtransform 
 	      (mrotate 
@@ -85,7 +97,7 @@
        (with-state
 	(shader-assign-compiled "default")   
 	(parent root)
-	(texture (load-texture "hypolaria-b-014.png"))
+	(texture (load-texture (string-append (car type) "-b-" (cadr type) ".png")))
 	(rotate (vector 45 0 0))
 	(scale (vector 3 10 10))
 	;;(hint-nozwrite)
@@ -120,7 +132,9 @@
   (butterfly-modify-pos
    (if (> (butterfly-t b) 1)
        (butterfly-modify-t 
-	(butterfly-modify-pos b (generate-start-pos)) 0)
+	(butterfly-modify-pos 
+	 (butterfly-modify-type b (choose-type))
+	 (generate-start-pos)) 0)
        (butterfly-modify-t b (+ (butterfly-t b) 0.002)))
    (vadd 
     (butterfly-pos b)
@@ -278,6 +292,8 @@
 
 (load-texture "hypolaria-w-014.png")
 (load-texture "hypolaria-b-014.png")
+(load-texture "hypothyris-w-017.png")
+(load-texture "hypothyris-b-017.png")
 (load-texture "shrub.png")
 (load-texture "test.png")
 (load-texture "white.png")
@@ -286,6 +302,20 @@
 (load-texture "tree.png")
 (load-texture "butterfly-01.png")
 
+(for-each 
+ (lambda (t)
+   (load-texture t))
+ (list
+  "plants/branch-0-00.png"
+  "plants/branch-0-01.png"
+  "plants/leaf-0-00.png"
+  "plants/leaf-0-01.png"
+  "plants/leaf-0-02.png"
+  "plants/branch-1-00.png"
+  "plants/leaf-1-00.png"
+  "plants/leaf-1-01.png"
+  "plants/leaf-1-02.png"))
+   
 (load-mesh-cache "models/plane.obj")
 (load-mesh-cache "models/lsys-plane.obj")
 
@@ -393,9 +423,9 @@
     (with-state
      (parent game-root)
      (set! trees (list
-		 ;; (with-state
-		 ;; 	(translate (vector -10 -6 0))
-		 ;; 	(build-tree))
+		  (with-state
+		   (translate (vector -10 -6 0))
+		   (build-tree))
 		 ;; (with-state
 		 ;; 	(translate (vector 0 -6 0))
 		 ;; 	(build-tree))
