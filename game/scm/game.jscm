@@ -17,7 +17,9 @@
 (define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
 
 (define health 100)
-(define health-dec 0.75)
+(define health-dec (local-get-param "clearwing" "Health Decrease"))
+(define health-inc (local-get-param "clearwing" "Health Increase"))
+(define hint-time 100)
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -202,7 +204,7 @@
 
 (define (butterfly-hit butterflies butterfly pos)
   (make-gobble (vx pos) (vy pos) 0 255 0 0.05)
-  (set! health (+ health 10))
+  (set! health (+ health health-inc))
   (map
    (lambda (b)
      (cond 
@@ -444,6 +446,7 @@
     (set! game-root (build-locator))
     (shuffle-background)
     (set! health 100)
+    (set! hint-time 100)
     (with-state
      (parent game-root)
      (set! trees (list
@@ -489,10 +492,19 @@
     (animate-butterflies! butterflies (time))
     (animate-trees trees)
     (ctx.clearRect 0 0 screen-width screen-height)	  
-    (draw-health ctx 450 30 health 100)
     (draw-gobble ctx)
 
     (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
+    (draw-health ctx 450 30 health 100)
+
+    (set! hint-time (+ hint-time 0.1))
+
+    (when (and (< health 20) (< (modulo hint-time 2) 1))
+	  (set! ctx.fillStyle "#f00")	  
+	  (ctx.fillText "Warning: Low Health!" 
+			(- (/ screen-width 2) 150) 
+			300))	   
+
     (when (< health 1)
 	  (destroy game-root)
 	  (set! game-mode "title")

@@ -19,9 +19,13 @@
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
+;;(local-nuke)
+
 (local-setup-params 
  "clearwing" 
  (list
   (list "Session ID" 0)
   (list "Butterfly Speed" 0.5)
-  (list "Flap Speed" 8)))
+  (list "Flap Speed" 8)
+  (list "Health Decrease" 0.75)
+  (list "Health Increase" 10)))
