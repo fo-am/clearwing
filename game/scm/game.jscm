@@ -238,9 +238,7 @@
 	 (butterfly-jitter b)
 	 
 	 ))
-       (butterfly-modify-pos 
-	(butterfly-modify-id b (butterfly-generate-id))
-	(generate-start-pos)))
+       (butterfly-modify-state b "dead"))
       (else b)))
    butterflies))
 
@@ -289,13 +287,16 @@
 	 (build-butterfly type (generate-start-pos type)))
        (build-butterfly 
 	"title" 
-	(vector (+ -50 (* (rndf) 100)) 
+	(vector (+ -100 (* (rndf) 50)) 
 		(* (crndf) 50) 0)))))
 
 (define (butterfly-birth b mode)
   (filter
    (lambda (b)
-     (not (eq? (butterfly-state b) "dead")))
+     (cond 
+      ((eq? (butterfly-state b) "dead")
+       (destroy-butterfly b) #f)
+      (else #t)))
    (if (and (< (length b) max-population)
 	    (< (rndf) new-butterfly-chance))
        (cons (build-new-butterfly mode) b)
@@ -444,6 +445,7 @@
    ((eq? game-mode "title")
     (set-background "images/bg.jpg")
     (canvas-setup)
+    (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
     (set! butterflies '())
     (set! title-text 
@@ -469,6 +471,7 @@
     (set! hint-time 100)
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
+    (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
 
     (with-state
      (parent game-root)
@@ -490,6 +493,7 @@
 
    ((eq? game-mode "end")
     (set-background "images/bg.jpg")
+    (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
     (let ((time-taken (/ (- (js "new Date()") game-start-time) 1000.0)))
 
@@ -511,7 +515,7 @@
 	      "This score puts you in xx place today."))))
     
     (set! button-a (make-text-button 
-		    (vector (- (/ screen-width 2) 200) 400 0) 
+		    (vector (- (/ screen-width 2) 200) 420 0) 
 		    20 "Play again"
 		    (lambda ()
 		      (destroy game-root)
@@ -519,7 +523,7 @@
 		      (run-init))))
     
     (set! button-b (make-text-button 
-		    (vector (+ (/ screen-width 2) 200) 400 0) 
+		    (vector (+ (/ screen-width 2) 200) 420 0) 
 		    20 "Quit"
 		    (lambda ()
 		      (destroy game-root)
