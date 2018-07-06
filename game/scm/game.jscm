@@ -20,6 +20,13 @@
 (define health-dec (local-get-param "clearwing" "Health Decrease"))
 (define health-inc (local-get-param "clearwing" "Health Increase"))
 (define hint-time 100)
+(define butterflies-caught 0)
+(define game-start-time 0)
+(define max-population (local-get-param "clearwing" "Max Population"))
+(define new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
+(define appearance-area-w (local-get-param "clearwing" "Appearance Area Width"))
+(define appearance-area-h (local-get-param "clearwing" "Appearance Area Height"))
+(define appearance-depth (local-get-param "clearwing" "Appearance Depth"))
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -106,55 +113,58 @@
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
-	     (rndf) (rndf)))))
+	     (rndf) 0))))
 
-      
-       ;; build the body
+     
+      ;; build the body
+      (with-state
+       (shader-assign-compiled "default")   
+       (parent root)
+       (texture (load-texture (string-append (car type) "-b-" (cadr type) ".png")))
+       (rotate (vector 45 0 0))
+       (scale (vector 3 10 10))
+       ;;(hint-nozwrite)
        (with-state
-	(shader-assign-compiled "default")   
-	(parent root)
-	(texture (load-texture (string-append (car type) "-b-" (cadr type) ".png")))
-	(rotate (vector 45 0 0))
-	(scale (vector 3 10 10))
-	;;(hint-nozwrite)
-	(with-state
-	 (translate (vector 0.24 0 0))
-	 (load-primitive "models/plane.obj"))
-	
-	(with-state
-	 (scale (vector -1 1 1))
-	 (translate (vector 0.24 0 0))
-	 (load-primitive "models/plane.obj")))
+	(translate (vector 0.24 0 0))
+	(load-primitive "models/plane.obj"))
        
-       (with-primitive 
-	(butterfly-left-wing ret)
+       (with-state
 	(scale (vector -1 1 1))
 	(translate (vector 0.24 0 0))
-	(apply-transform!)
-	)
-       (with-primitive 
-	(butterfly-right-wing ret)
-	(translate (vector 0.24 0 0))
-	(apply-transform!)
-	(rotate (vector 45 0 0))
-	)
+	(load-primitive "models/plane.obj")))
+      
+      (with-primitive 
+       (butterfly-left-wing ret)
+       (scale (vector -1 1 1))
+       (translate (vector 0.24 0 0))
+       (apply-transform!)
+       )
+      (with-primitive 
+       (butterfly-right-wing ret)
+       (translate (vector 0.24 0 0))
+       (apply-transform!)
+       (rotate (vector 45 0 0))
+       )
       ret)))
-
 
 (define (generate-start-pos state)
   (if (eq? state "title")
       (vector -50 (* (crndf) 50) 0)
-      (vmul (vector (crndf) (crndf) -2) 100)))
-
+      (vector (* (crndf) appearance-area-w) 
+	      (* (crndf) appearance-area-h) 
+	      appearance-depth)))
 
 (define (update-butterfly b)
   (butterfly-modify-pos
-   (if (> (butterfly-t b) 1)
+   (if (if (eq? (butterfly-state b) "title")
+	   (> (vx (butterfly-pos b)) 50)
+	   (> (vz (butterfly-pos b)) 0))
        (butterfly-modify-t 
 	(butterfly-modify-pos 
 	 (butterfly-modify-type b (choose-type))
-	 (generate-start-pos (butterfly-state b))) 0)
-       (butterfly-modify-t b (+ (butterfly-t b) 0.002)))
+	 (generate-start-pos (butterfly-state b))) 
+	0)
+       (butterfly-modify-t b (+ (butterfly-t b) canvas-delta)))
    (vadd 
     (butterfly-pos b)
     (butterfly-dir b)
@@ -201,8 +211,10 @@
       (fn butterfly-list (list-ref closest 3) (list-ref closest 2)))
      (else butterfly-list))))
 
+(define save-version 1)
 
 (define (butterfly-hit butterflies butterfly pos)
+  (set! butterflies-caught (+ butterflies-caught 1))
   (make-gobble (vx pos) (vy pos) 0 255 0 0.05)
   (set! health (+ health health-inc))
   (map
@@ -213,11 +225,22 @@
 	"clearwing" 
 	(string-append "hits-" (local-get-param "clearwing" "Session ID"))
 	(list
+	 save-version
 	 (local-get-param "clearwing" "Session ID")
 	 (butterfly-id b)
+	 (butterfly-state b)
+	 (string-append (car (butterfly-type b)) "-" (cadr (butterfly-type b)))
 	 (vx pos) 
 	 (vy pos)
-	 ;; etc
+	 (vx (butterfly-pos b))
+	 (vy (butterfly-pos b))
+	 (vz (butterfly-pos b))
+	 (vx (butterfly-dir b))
+	 (vy (butterfly-dir b))
+	 (vz (butterfly-dir b))
+	 (butterfly-t b)
+	 (butterfly-jitter b)
+	 
 	 ))
        (butterfly-modify-pos 
 	(butterfly-modify-id b (butterfly-generate-id))
@@ -262,26 +285,32 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (build-butterflies n)
-  (build-list n (lambda (_) 
-		  (build-butterfly 
-		   (choose (list "approach" "circle"))
-		   (vector 1000 0 0)))))
+(define (build-new-butterfly mode)
+  (with-state
+   (parent game-root)
+   (if (eq? mode "game")
+       (let ((type (choose (list "approach" "circle"))))
+	 (build-butterfly type (generate-start-pos type)))
+       (build-butterfly 
+	"title" 
+	(vector (+ -50 (* (rndf) 100)) 
+		(* (crndf) 50) 0)))))
 
-(define (build-title-butterflies n)
-  (build-list n (lambda (_) 
-		  (build-butterfly 
-		   "title" 
-		   (vector (+ -50 (* (rndf) 100)) 
-			   (* (crndf) 50) 0)))))
-
-(define (update-butterflies b)
+(define (butterfly-birth b mode)
+  (if (and (< (length b) max-population)
+	   (< (rndf) new-butterfly-chance))
+      (cons (build-new-butterfly mode) b)
+      b))
+  
+(define (update-butterflies b mode)
   (map
    (lambda (b)
-     (update-butterfly b ))
-   (if canvas-mouse-clicked
-       (butterfly-detect-hits b butterfly-hit)
-       b)))
+     (update-butterfly b))
+   (butterfly-birth 
+    (if canvas-mouse-clicked
+	(butterfly-detect-hits b butterfly-hit)
+	b)
+    mode)))
 
 (define (animate-butterflies! b t)
   (for-each 
@@ -416,11 +445,8 @@
    ((eq? game-mode "title")
     (set-background "images/bg.jpg")
     (canvas-setup)
-    (clear-colour (vector 0 0 0))    
     (set! game-root (build-locator))
-    (with-state
-     (parent game-root)
-     (set! butterflies (build-title-butterflies 30)))
+    (set! butterflies '())
     (set! title-text 
 	  (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
 			(list "Clearwing Butterfly Game")))
@@ -428,25 +454,23 @@
 	  (make-textbox (/ screen-width 2) 300 "20pt" 40 "left" 
 			(list "Take part in this citizen science game by" 
 			      "hunting butterflies in the jungle!")))
-    (set! leaf-obj (with-state 
-		    (translate (vector 1000 0 0)) 
-		    (load-primitive "models/lsys-plane.obj")))
 
-    (set! start-button (make-text-button 
-			(vector (/ screen-width 2) (- screen-height 200) 0) 
-			20 "Play"
-			(lambda ()
-			  (destroy game-root)
-			  (set! game-mode "game")
-			  (run-init))))
-    
-    (clear-colour (list 0.0 0.0 0.0 0.0)))
+    (set! button-a (make-text-button 
+		    (vector (/ screen-width 2) 400 0) 
+		    20 "Play"
+		    (lambda ()
+		      (destroy game-root)
+		      (set! game-mode "game")
+		      (run-init)))))
 
    ((eq? game-mode "game")
     (set! game-root (build-locator))
     (shuffle-background)
     (set! health 100)
     (set! hint-time 100)
+    (set! butterflies-caught 0)
+    (set! game-start-time (js "new Date()"))
+
     (with-state
      (parent game-root)
      (set! trees (list
@@ -463,8 +487,46 @@
 		  (scale (vector 0.5 0.5 0.5))
 		  (translate (vector 25 -10 0))
 		  (build-tree2))))
-     (set! butterflies (build-butterflies 9))))
+     (set! butterflies '())))
 
+   ((eq? game-mode "end")
+    (set-background "images/bg.jpg")
+    (set! game-root (build-locator))
+    (let ((time-taken (/ (- (js "new Date()") game-start-time) 1000.0)))
+
+      (local-add-item 
+       "clearwing" "score" 
+       (list (local-get-param "clearwing" "Session ID")
+	     time-taken butterflies-caught))
+
+      (set! butterflies '())
+      (set! title-text 
+	    (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
+			  (list "Thankyou for playing")))
+      (set! info-text 
+	    (make-textbox 
+	     (/ screen-width 2) 300 "20pt" 40 "left" 
+	     (list 
+	      (string-append "You lasted " time-taken " seconds.")
+	      (string-append "Caught " butterflies-caught " butterflies.") 
+	      "This score puts you in xx place today."))))
+    
+    (set! button-a (make-text-button 
+		    (vector (- (/ screen-width 2) 200) 400 0) 
+		    20 "Play again"
+		    (lambda ()
+		      (destroy game-root)
+		      (set! game-mode "game")
+		      (run-init))))
+    
+    (set! button-b (make-text-button 
+		    (vector (+ (/ screen-width 2) 200) 400 0) 
+		    20 "Quit"
+		    (lambda ()
+		      (destroy game-root)
+		      (set! game-mode "title")
+		      (run-init)))))
+   
    (else 0)))
 
 (define (render-game)
@@ -473,8 +535,8 @@
   (canvas-update-time)
   (cond
    ((eq? game-mode "title")
-    (text-button-update start-button 0)    
-    (set! butterflies (update-butterflies butterflies))
+    (text-button-update button-a 0)    
+    (set! butterflies (update-butterflies butterflies game-mode))
     (animate-butterflies! butterflies (time))
 
     (ctx.clearRect 0 0 screen-width screen-height)	  
@@ -485,10 +547,10 @@
     (set! ctx.fillStyle "#000")
     (textbox-render! title-text)
     (textbox-render! info-text)
-    (text-button-render! start-button)
+    (text-button-render! button-a)
     0)
    ((eq? game-mode "game")
-    (set! butterflies (update-butterflies butterflies))
+    (set! butterflies (update-butterflies butterflies game-mode))
     (animate-butterflies! butterflies (time))
     (animate-trees trees)
     (ctx.clearRect 0 0 screen-width screen-height)	  
@@ -507,8 +569,27 @@
 
     (when (< health 1)
 	  (destroy game-root)
-	  (set! game-mode "title")
+	  (set! game-mode "end")
 	  (run-init))
+    0)
+   ((eq? game-mode "end")
+
+    (text-button-update button-a 0)    
+    (text-button-update button-b 0)    
+    (set! butterflies (update-butterflies butterflies game-mode))
+    (animate-butterflies! butterflies (time))
+
+    (ctx.clearRect 0 0 screen-width screen-height)	  
+    (set! ctx.fillStyle "#fff")
+    (set! ctx.globalAlpha 0.75)
+    (ctx.fillRect 0 160 screen-width 340)
+    (set! ctx.globalAlpha 1.0)
+    (set! ctx.fillStyle "#000")
+    (textbox-render! title-text)
+    (textbox-render! info-text)
+    (text-button-render! button-a)
+    (text-button-render! button-b)
+
     0)
    (else 0)))
 
@@ -522,7 +603,12 @@
 	  )
 	 (set! init #t)
 	 (set! game-mode "title")
+
+	 (set! leaf-obj (with-state 
+			 (translate (vector 1000 0 0)) 
+			 (load-primitive "models/lsys-plane.obj")))
 	 (run-init)	 
+	 (clear-colour (list 0.0 0.0 0.0 0.0))
 	 (every-frame render-game)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

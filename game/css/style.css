@@ -1,4 +1,8 @@
-@import url('https://fonts.googleapis.com/css?family=Poiret+One');
+@font-face {
+  font-family: 'Poiret One';
+  src: local('Poiret One'),
+        url('../fonts/Poiret_One/PoiretOne-Regular.ttf');
+}
 
 body {
     font-family: 'Poiret One'; important;
