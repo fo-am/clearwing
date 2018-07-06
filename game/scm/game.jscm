@@ -159,11 +159,7 @@
    (if (if (eq? (butterfly-state b) "title")
 	   (> (vx (butterfly-pos b)) 50)
 	   (> (vz (butterfly-pos b)) 0))
-       (butterfly-modify-t 
-	(butterfly-modify-pos 
-	 (butterfly-modify-type b (choose-type))
-	 (generate-start-pos (butterfly-state b))) 
-	0)
+       (butterfly-modify-state b "dead")
        (butterfly-modify-t b (+ (butterfly-t b) canvas-delta)))
    (vadd 
     (butterfly-pos b)
@@ -297,10 +293,13 @@
 		(* (crndf) 50) 0)))))
 
 (define (butterfly-birth b mode)
-  (if (and (< (length b) max-population)
-	   (< (rndf) new-butterfly-chance))
-      (cons (build-new-butterfly mode) b)
-      b))
+  (filter
+   (lambda (b)
+     (not (eq? (butterfly-state b) "dead")))
+   (if (and (< (length b) max-population)
+	    (< (rndf) new-butterfly-chance))
+       (cons (build-new-butterfly mode) b)
+       b)))
   
 (define (update-butterflies b mode)
   (map
