@@ -379,6 +379,7 @@
    
 (load-mesh-cache "models/plane.obj")
 (load-mesh-cache "models/lsys-plane.obj")
+(load-mesh-cache "models/lsys-plane2.obj")
 
 (load-images!
  (list
@@ -392,21 +393,19 @@
   (crop
    (shuffle
     (with-state
-     (shader-assign-compiled "unlit")   
+     (shader-assign-compiled "default")   
      (translate (vector 0 -25 0))
      (rotate (vector 0 0 90))
      (scale (vector 20 20 20))
-     (ls-build (ls-generate 6 "A" (list 
-				   (list "A" "a[^Bd][&&d][&Ac]")
-				   (list "B" "b[^Ac][^e][&Be]")
+     (ls-build (ls-generate 5 "A" (list 
+				   (list "A" "a[+A^b][&&d][&Ac]")
 				   ))
-	       20 20 20 0.85 70 leaf-obj
+	       20 20 20 0.85 70 leaf-obj2
 	       (list 
-		"plants/branch-0-00.png"
-		"plants/branch-0-01.png"
-		"plants/leaf-0-00.png"
-		"plants/leaf-0-02.png"
-		"plants/leaf-0-02.png"
+		"plants/branch-1-00.png"
+		"plants/2-1.png"
+		"plants/2-2.png"
+		"plants/2-3.png"
 		)
 	       (vector 1 1 1))))
    30))
@@ -436,6 +435,7 @@
 (define init #f)
 (define butterflies '())
 (define leaf-obj 0)
+(define leaf-obj2 0)
 (define tree-root 0)
 
 (define trees '())
@@ -476,9 +476,9 @@
     (with-state
      (parent game-root)
      (set! trees (list
-		  ;;(with-state
-		  ;; (translate (vector -10 -6 0))
-		  ;; (build-tree))
+		  (with-state
+		   (translate (vector -10 -6 0))
+		   (build-tree))
 		  ;; (with-state
 		  ;; 	(translate (vector 0 -6 0))
 		  ;; 	(build-tree))
@@ -610,6 +610,9 @@
 	 (set! leaf-obj (with-state 
 			 (translate (vector 1000 0 0)) 
 			 (load-primitive "models/lsys-plane.obj")))
+	 (set! leaf-obj2 (with-state 
+			  (translate (vector 1000 0 0)) 
+			  (load-primitive "models/lsys-plane2.obj")))
 	 (run-init)	 
 	 (clear-colour (list 0.0 0.0 0.0 0.0))
 	 (every-frame render-game)))

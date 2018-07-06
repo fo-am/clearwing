@@ -55,6 +55,10 @@ resources = [
     "textures/plants/leaf-1-01.png",
     "textures/plants/leaf-1-02.png",
 
+    "textures/plants/2-1.png",
+    "textures/plants/2-2.png",
+    "textures/plants/2-3.png",
+
     "textures/hypolaria-w-014.png",
     "textures/hypolaria-b-014.png",
     "textures/hypothyris-w-017.png",
@@ -64,7 +68,7 @@ resources = [
 
     "models/plane.obj",
     "models/lsys-plane.obj",
-    "models/flag.obj",
+    "models/lsys-plane2.obj",
 
     "scm/lsys.jscm",
     "scm/local-storage.jscm",
