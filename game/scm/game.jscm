@@ -16,6 +16,9 @@
 (define flap-speed (local-get-param "clearwing" "Flap Speed"))
 (define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
 
+(define health 100)
+(define health-dec 0.75)
+
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
     (set! current-butterfly-id (+ current-butterfly-id 1))
@@ -25,6 +28,13 @@
   (local-set-param 
    "clearwing" "Session ID" 
    (+ (local-get-param "clearwing" "Session ID") 1)))
+
+(define (draw-health ctx x y t max-t)
+  (let ((h (/ t max-t)))
+    (set! ctx.fillStyle (string-append "rgba(" (Math.floor (* (- 1 h) 255)) ", "
+                                       (Math.floor (* h 255)) ", " 0 ", 1.0)"))
+    (ctx.fillRect (+ x 50) (+ y 30) (* h 245) 37)
+    (ctx.drawImage (find-image "health.png" image-lib) x y)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -192,6 +202,7 @@
 
 (define (butterfly-hit butterflies butterfly pos)
   (make-gobble (vx pos) (vy pos) 0 255 0 0.05)
+  (set! health (+ health 10))
   (map
    (lambda (b)
      (cond 
@@ -338,6 +349,12 @@
 (load-mesh-cache "models/plane.obj")
 (load-mesh-cache "models/lsys-plane.obj")
 
+(load-images!
+ (list
+  "health.png")
+ (lambda ()
+   0))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (build-tree)
@@ -426,13 +443,7 @@
    ((eq? game-mode "game")
     (set! game-root (build-locator))
     (shuffle-background)
-    (set! start-button (make-text-button 
-			(vector (- screen-width 100) (- screen-height 50) 0)
-			20 "Quit"
-			(lambda ()
-			  (destroy game-root)
-			  (set! game-mode "title")
-			  (run-init))))
+    (set! health 100)
     (with-state
      (parent game-root)
      (set! trees (list
@@ -456,6 +467,7 @@
 (define (render-game)
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
+  (canvas-update-time)
   (cond
    ((eq? game-mode "title")
     (text-button-update start-button 0)    
@@ -473,15 +485,20 @@
     (text-button-render! start-button)
     0)
    ((eq? game-mode "game")
-    (text-button-update start-button 0)    
     (set! butterflies (update-butterflies butterflies))
     (animate-butterflies! butterflies (time))
     (animate-trees trees)
     (ctx.clearRect 0 0 screen-width screen-height)	  
+    (draw-health ctx 450 30 health 100)
     (draw-gobble ctx)
-    (text-button-render! start-button))
-   (else 0)))
 
+    (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
+    (when (< health 1)
+	  (destroy game-root)
+	  (set! game-mode "title")
+	  (run-init))
+    0)
+   (else 0)))
 
 (define (start)
   (when  (and
@@ -489,7 +506,7 @@
 	  (meshes-loaded?)
 	  (textures-loaded?)
 	  (shaders-loaded?)
-	  ;(canvas-loaded?)
+	  (canvas-loaded?)
 	  )
 	 (set! init #t)
 	 (set! game-mode "title")
