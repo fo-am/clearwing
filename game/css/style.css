@@ -1,8 +1,14 @@
+@import url('https://fonts.googleapis.com/css?family=Poiret+One');
+
+body {
+    font-family: 'Poiret One'; important;
+}
+
 .code-container {
     position: absolute;
     left: 0px;
     top: 1.2em;
-//    font-family: 'deja'; important;
+//    font-family: 'Poiret+One'; important;
     font-size: 100%;
     border: 0;
     color: #000;
@@ -12,7 +18,7 @@
 }
 
 #webgl-canvas {
-    background: url('../textures/bg.png'); 
+    background: url('../images/bg.jpg'); 
     position: absolute; 
     left: 0px; 
     top: 0px; 
