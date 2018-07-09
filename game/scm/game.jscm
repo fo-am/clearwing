@@ -236,7 +236,9 @@
 	 (vz (butterfly-dir b))
 	 (butterfly-t b)
 	 (butterfly-jitter b)
-	 
+	 ""
+	 ""
+	 ""
 	 ))
        (butterfly-modify-state b "dead"))
       (else b)))
@@ -444,6 +446,7 @@
   (cond 
    ((eq? game-mode "title")
     (set-background "images/bg.jpg")
+    (advance-session-id)
     (canvas-setup)
     (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
@@ -458,7 +461,7 @@
 
     (set! button-a (make-text-button 
 		    (vector (/ screen-width 2) 400 0) 
-		    20 "Play"
+		    50 "Play"
 		    (lambda ()
 		      (destroy game-root)
 		      (set! game-mode "game")
@@ -516,7 +519,7 @@
     
     (set! button-a (make-text-button 
 		    (vector (- (/ screen-width 2) 200) 420 0) 
-		    20 "Play again"
+		    50 "Play again"
 		    (lambda ()
 		      (destroy game-root)
 		      (set! game-mode "game")
@@ -524,7 +527,7 @@
     
     (set! button-b (make-text-button 
 		    (vector (+ (/ screen-width 2) 200) 420 0) 
-		    20 "Quit"
+		    50 "Quit"
 		    (lambda ()
 		      (destroy game-root)
 		      (set! game-mode "title")
@@ -623,8 +626,6 @@
 (resize-canvas canvas)
 (Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
-
-(advance-session-id)
 
 (every-frame (start))
 

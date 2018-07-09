@@ -6,7 +6,7 @@
 (define (get-data-as-csv)
   (define (_ n max r)
     (cond 
-     ((eq? n max) r)
+     ((> n max) r)
      (else
       (if (local-exists? (string-append "clearwing-" (string-append "hits-" n)))
 	  (_ (+ n 1) max 
@@ -14,7 +14,7 @@
 	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
 	  (_ (+ n 1) max r)))))
   (dbg (_ 0 (local-get-param "clearwing" "Session ID") 
-	  "data-version, session, butterfly-id, state, type, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed\\n")))
+	  "data-version, session, butterfly-id, state, type, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background, temp1, temp2\\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
@@ -23,7 +23,6 @@
  "clearwing" 
  (list
   (list "Session ID" 0)
-  (list "Max Population" 10)
   (list "Butterfly Speed" 0.5)
   (list "Flap Speed" 8)
   (list "Max Population" 10)
