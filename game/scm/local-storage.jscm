@@ -15,6 +15,13 @@
 (define (local-exists? name)
   (localStorage.getItem name))
 
+(define (local-load-or-create name def)
+  (cond 
+   ((not (local-exists? name))
+    (local-save name def)
+    def)
+   (else (local-load name))))
+
 (define (param-form key value)
   (string-append
    "<div class='row'>

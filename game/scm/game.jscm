@@ -75,13 +75,12 @@
 (define (destroy-butterfly b)
   (destroy (butterfly-root b)))
 
-(define (choose-type)
-  (choose 
-   (list
-    (list "hypolaria" "014")
-    (list "hypothyris" "017")
-    (list "ithomia" "013")
-    )))
+(define (choose-type) 
+  (let ((selected (local-load "clearwing-selected")))
+    (if (null? selected) 
+	(choose butterfly-types)
+	(let ((id (choose selected)))
+	  (id.split "-")))))
 
 (define (build-butterfly state pos)
   (let ((root (build-locator))

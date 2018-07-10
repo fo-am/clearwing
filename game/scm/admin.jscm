@@ -29,8 +29,51 @@
 	  (local-nuke)
 	  (local-save "clearwing-version" admin-version)
 	  )))
+
+
+(define (butterfly-form name selected)
+  (let ((id (string-append (car name) "-" (cadr name))))
+    (string-append
+     "<div style='display:inline-block; width:100px'>
+     <button id='" id "' onclick='butterfly_toggle(this);'>
+       <img src='textures/" (car name) "-w-" (cadr name) ".png' width=100 height=100>
+     </button>
+     <center><div id='" id "-text'>" 
+     (if (list-contains? selected id) "ON" "OFF") 
+     "</div></center>
+   </div>")))
+
+(define (butterfly-toggle a b)
+  (let ((name a.id))
+    (let ((c (document.getElementById (string-append name "-text")))
+	  (selected (local-load "clearwing-selected")))
+      (cond 
+       ((list-contains? selected name)	 
+	(local-save "clearwing-selected" (list-remove selected name))
+	(set! c.innerHTML "OFF"))
+       (else
+	(local-save "clearwing-selected" (cons name selected))
+	(set! c.innerHTML "ON"))))))
+
+(define (setup-morph-interface)
+  (let ((c ($ ".morph-list") )
+	(selected (local-load-or-create "clearwing-selected" '())))
+    (for-each
+     (lambda (name)
+       (c.append (butterfly-form name selected)))
+     butterfly-types)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		 
 (version-check)
+
+(define butterfly-types    
+  (list
+   (list "hypolaria" "014")
+   (list "hypothyris" "017")
+   (list "ithomia" "013")))
+
+(setup-morph-interface)
 
 (local-setup-params 
  "clearwing" 
