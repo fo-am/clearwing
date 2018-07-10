@@ -33,9 +33,24 @@
        (c.append (param-form (car m) (cadr m))))
      params)))
 
+(define (check-and-add-params! namespace new-params)
+  ;; fold over current params, adding new ones if they don't exist
+  (local-save 
+   (string-append namespace "-params")
+   (foldl
+    (lambda (param r)
+      (if (not (local-get-param namespace (car param)))
+	  (begin
+	    (msg (string-append "Adding " (car param) " to existing params"))
+	    (append r (list param)))
+	  r))
+    (local-load (string-append namespace "-params"))
+    new-params)))
+
 (define (local-setup-params namespace params)
   (when (not (local-exists? (string-append namespace "-params")))
 	(local-save (string-append namespace "-params") params))
+  (check-and-add-params! namespace params)
   (setup-params-interface (local-load (string-append namespace "-params"))))
 
 (define (local-set-param namespace name value)
@@ -48,7 +63,7 @@
 	  kv))
     (local-load (string-append namespace "-params")))))
 
-(define (local-get-param namespace name)
+(define (local-get-param namespace name) 
    (foldl
     (lambda (kv r)
       (if (eq? (car kv) name)

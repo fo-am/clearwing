@@ -31,4 +31,6 @@
   (list "Appearance Area Height" 100)
   (list "Appearance Depth" -200)
   (list "Health Decrease" 7)
-  (list "Health Increase" 10)))
+  (list "Health Increase" 10)
+  (list "Path Variation Degrees" 20)
+  ))

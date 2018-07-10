@@ -28,6 +28,9 @@
 (define appearance-area-h (local-get-param "clearwing" "Appearance Area Height"))
 (define appearance-depth (local-get-param "clearwing" "Appearance Depth"))
 
+(define radians-per-degree 0.0174533)
+(define butterfly-dir-var (* radians-per-degree (local-get-param "clearwing" "Path Variation Degrees")))
+
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
     (set! current-butterfly-id (+ current-butterfly-id 1))
@@ -66,9 +69,6 @@
 (define (butterfly-jitter b) (list-ref b 8))
 (define (butterfly-t b) (list-ref b 9))
 (define (butterfly-modify-t b v) (list-replace b 9 v))
-
-(define radians-per-degree 0.0174533)
-(define butterfly-dir-var (* radians-per-degree 20))
 
 (define (destroy-butterfly b)
   (destroy (butterfly-root b)))
