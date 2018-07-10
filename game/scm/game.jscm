@@ -27,9 +27,11 @@
 (define appearance-area-w (string->number (local-get-param "clearwing" "Appearance Area Width")))
 (define appearance-area-h (string->number (local-get-param "clearwing" "Appearance Area Height")))
 (define appearance-depth (string->number (local-get-param "clearwing" "Appearance Depth")))
-
+(define butterfly-circle-speed (string->number (local-get-param "clearwing" "Circle Speed")))
+(define butterfly-circle-timeout (string->number (local-get-param "clearwing" "Circle Timeout Seconds")))
 (define radians-per-degree 0.0174533)
-(define butterfly-dir-var (* radians-per-degree (local-get-param "clearwing" "Path Variation Degrees")))
+(define butterfly-dir-var (* radians-per-degree (string->number (local-get-param "clearwing" "Path Variation Degrees"))))
+(define hit-leeway (string->number (local-get-param "clearwing" "Hit Leeway Pixels")))
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -108,9 +110,11 @@
 		(* (crndf) butterfly-dir-var)) 
 	       (vector 0 0 1) 
 	       (* (crndf) butterfly-dir-var))
-	      (if (eq? state "title")
-		  (vector (/ butterfly-speed 2) 0 0)
-		  (vector 0 0 butterfly-speed)))
+	      (cond 
+	       ((eq? state "title")
+		(vector butterfly-speed 0 0))
+	       (else 
+		(vector 0 0 butterfly-speed))))
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
@@ -149,23 +153,43 @@
       ret)))
 
 (define (generate-start-pos state)
-  (if (eq? state "title")
-      (vector -50 (* (crndf) 50) 0)
-      (vector (* (crndf) appearance-area-w) 
-	      (* (crndf) appearance-area-h) 
-	      appearance-depth)))
+  (cond 
+   ((eq? state "title")
+    (vector (+ -15 (* (rndf) 5)) (* (crndf) 5) -10))
+   ((eq? state "circle")
+    (vector (* (crndf) appearance-area-w) 
+	    (* (crndf) appearance-area-h) 
+	    (* (rndf) appearance-depth)))
+   (else
+    (vector (* (crndf) appearance-area-w) 
+	    (* (crndf) appearance-area-h) 
+	    appearance-depth))))
 
 (define (update-butterfly b)
-  (butterfly-modify-pos
-   (if (if (eq? (butterfly-state b) "title")
-	   (> (vx (butterfly-pos b)) 12) 
-	   (> (vz (butterfly-pos b)) 2)) ;; slightly behind the back plane
-       (butterfly-modify-state b "dead")
-       (butterfly-modify-t b (+ (butterfly-t b) canvas-delta)))
-   (vadd 
-    (butterfly-pos b)
-    (butterfly-dir b)
-    )))
+  (let ((t (butterfly-t b)))
+    (butterfly-modify-pos
+     (if (or (and 
+	      (eq? (butterfly-state b) "circle")
+	      (> (butterfly-t b) butterfly-circle-timeout))
+	     (if (eq? (butterfly-state b) "title")
+		 (> (vx (butterfly-pos b)) 12) 
+		 ;; slightly behind the back plane
+		 (> (vz (butterfly-pos b)) 2)))
+	 (butterfly-modify-state b "dead")
+	 (butterfly-modify-t 
+	  (if (eq? (butterfly-state b) "circle")
+	      ;; rotate direction
+	      (butterfly-modify-dir 
+	       b (vmul (vector (cos (+ (* t butterfly-circle-speed) (* 6.3 (butterfly-jitter b)))) 
+			       0 
+			       (sin (+ (* t butterfly-circle-speed) (* 6.3 (butterfly-jitter b))))) 
+		       butterfly-speed))
+	      b)
+	  (+ t canvas-delta)))
+     (vadd 
+      (butterfly-pos b)
+      (butterfly-dir b)
+      ))))
 
 (define (animate-butterfly! b t)
   (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
@@ -190,6 +214,15 @@
 (define (butterfly-screen-pos s)
   (project-point (butterfly-pos s)))
 
+(define (butterfly-screen-size b)
+  (fabs
+   (vx
+    (with-primitive 
+     (butterfly-root b) 
+     (vsub 
+      (project-point (mtransform (get-transform) (vector 2.5 0 0)))
+      (project-point (mtransform (get-transform) (vector 0 0 0))))))))
+
 (define (butterfly-detect-hits butterfly-list fn)
   ;; find closest index
   (let ((closest
@@ -203,7 +236,7 @@
           butterfly-list)))
     ;; if less than hit dist
     (cond
-     ((< (car closest) 50)
+     ((< (car closest) (+ (/ (butterfly-screen-size (list-ref closest 3)) 2) hit-leeway))
       ;; remove it
       (fn butterfly-list (list-ref closest 3) (list-ref closest 2)))
      (else butterfly-list))))
@@ -227,6 +260,8 @@
 	 (butterfly-id b)
 	 (butterfly-state b)
 	 (string-append (car (butterfly-type b)) "-" (cadr (butterfly-type b)))
+	 (butterfly-screen-size b)
+	 (vmag (butterfly-pos b))
 	 (vx pos) 
 	 (vy pos)
 	 (vx (butterfly-pos b))
@@ -237,8 +272,6 @@
 	 (vz (butterfly-dir b))
 	 (butterfly-t b)
 	 (butterfly-jitter b)
-	 ""
-	 ""
 	 ""
 	 ))
        (butterfly-modify-state b "dead"))
@@ -290,8 +323,7 @@
 	 (build-butterfly type (generate-start-pos type)))
        (build-butterfly 
 	"title" 
-	(vector (+ -10 (* (rndf) 5)) 
-		(* (crndf) 5) -10)))))
+	(generate-start-pos "title")))))
 
 (define (butterfly-birth b mode)
   (filter
@@ -311,7 +343,9 @@
      (update-butterfly b))
    (butterfly-birth 
     (if canvas-mouse-clicked
-	(butterfly-detect-hits b butterfly-hit)
+	(begin
+	  (set! canvas-mouse-clicked #f)
+	  (butterfly-detect-hits b butterfly-hit))
 	b)
     mode)))
 
@@ -562,12 +596,25 @@
     (ctx.clearRect 0 0 screen-width screen-height)	  
     (draw-gobble ctx)
 
+    ;;(for-each
+    ;; (lambda (b)
+    ;;   (let ((p (butterfly-screen-pos b)))
+    ;;	 (ctx.fillText
+    ;;	  (string-append "" (butterfly-screen-size b))
+    ;;	  (vx p) (vy p))))
+    ;;   butterflies)
+    
     (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
     (draw-health ctx 450 30 health 100)
 
     (set! hint-time (+ hint-time 0.1))
 
     (when (and (< health 20) (< (modulo hint-time 2) 1))
+	  (set! ctx.fillStyle "#fff")
+	  (set! ctx.globalAlpha 0.75)
+	  (ctx.fillRect (- (/ screen-width 2) 180) 240 
+			440 100)
+	  (set! ctx.globalAlpha 1.0)
 	  (set! ctx.fillStyle "#f00")	  
 	  (ctx.fillText "Warning: Low Health!" 
 			(- (/ screen-width 2) 150) 
@@ -624,6 +671,7 @@
 
 (resize-glcanvas webgl-canvas)
 (resize-canvas canvas)
+(set-camera-angle 53)
 (Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
 

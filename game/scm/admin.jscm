@@ -14,7 +14,7 @@
 	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
 	  (_ (+ n 1) max r)))))
   (dbg (_ 0 (local-get-param "clearwing" "Session ID") 
-	  "data-version, session, butterfly-id, state, type, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background, temp1, temp2\\n")))
+	  "data-version, session, butterfly-id, state, type, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background\\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
@@ -36,15 +36,18 @@
  "clearwing" 
  (list
   (list "Session ID" 0)
-  (list "Butterfly Speed" 0.125)
+  (list "Butterfly Speed" 0.0625)
   (list "Flap Speed" 8)
   (list "Max Population" 10)
   (list "New Butterfly Chance" 0.01)
-  (list "Appearance Area Width" 20)
+  (list "Appearance Area Width" 40)
   (list "Appearance Area Height" 20)
-  (list "Appearance Depth" -40)
+  (list "Appearance Depth" -80)
   (list "Health Decrease" 7)
   (list "Health Increase" 10)
   (list "Path Variation Degrees" 20)
+  (list "Circle Speed" 3)
+  (list "Circle Timeout Seconds" 10)
+  (list "Hit Leeway Pixels" 10)
   ))
 
