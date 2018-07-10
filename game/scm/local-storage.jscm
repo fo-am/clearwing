@@ -39,7 +39,7 @@
    (string-append namespace "-params")
    (foldl
     (lambda (param r)
-      (if (not (local-get-param namespace (car param)))
+      (if (not (local-param-exists? namespace (car param)))
 	  (begin
 	    (msg (string-append "Adding " (car param) " to existing params"))
 	    (append r (list param)))
@@ -64,12 +64,20 @@
     (local-load (string-append namespace "-params")))))
 
 (define (local-get-param namespace name) 
-   (foldl
-    (lambda (kv r)
-      (if (eq? (car kv) name)
-	  (cadr kv) r))
-    #f
-    (local-load (string-append namespace "-params"))))
+  (foldl
+   (lambda (kv r)
+     (if (eq? (car kv) name)
+	 (cadr kv) r))
+   #f
+   (local-load (string-append namespace "-params"))))
+
+(define (local-param-exists? namespace name) 
+  (foldl
+   (lambda (kv r)
+     (if (eq? (car kv) name)
+	 #t r))
+   #f
+   (local-load (string-append namespace "-params"))))
 
 ;; used for streaming data, not params
 (define (local-add-item namespace name value)

@@ -17,16 +17,16 @@
 (define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
 
 (define health 100)
-(define health-dec (local-get-param "clearwing" "Health Decrease"))
-(define health-inc (local-get-param "clearwing" "Health Increase"))
+(define health-dec (string->number (local-get-param "clearwing" "Health Decrease")))
+(define health-inc (string->number (local-get-param "clearwing" "Health Increase")))
 (define hint-time 100)
 (define butterflies-caught 0)
 (define game-start-time 0)
-(define max-population (local-get-param "clearwing" "Max Population"))
-(define new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
-(define appearance-area-w (local-get-param "clearwing" "Appearance Area Width"))
-(define appearance-area-h (local-get-param "clearwing" "Appearance Area Height"))
-(define appearance-depth (local-get-param "clearwing" "Appearance Depth"))
+(define max-population (string->number (local-get-param "clearwing" "Max Population")))
+(define new-butterfly-chance (string->number (local-get-param "clearwing" "New Butterfly Chance")))
+(define appearance-area-w (string->number (local-get-param "clearwing" "Appearance Area Width")))
+(define appearance-area-h (string->number (local-get-param "clearwing" "Appearance Area Height")))
+(define appearance-depth (string->number (local-get-param "clearwing" "Appearance Depth")))
 
 (define radians-per-degree 0.0174533)
 (define butterfly-dir-var (* radians-per-degree (local-get-param "clearwing" "Path Variation Degrees")))
@@ -89,7 +89,8 @@
 	    (shader-assign-compiled "default")   
 	    (parent root)
 	    (texture (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
-	    (scale (vector 10 10 10))
+	    ;; wings are approx 2.5 cm wide
+	    (scale (vector 2.5 2.5 2.5))
 	    (hint-nozwrite)
 	    (make-butterfly
 	     (butterfly-generate-id)
@@ -122,7 +123,7 @@
        (parent root)
        (texture (load-texture (string-append (car type) "-b-" (cadr type) ".png")))
        (rotate (vector 45 0 0))
-       (scale (vector 3 10 10))
+       (scale (vector 1 2.5 2.5))
        ;;(hint-nozwrite)
        (with-state
 	(translate (vector 0.24 0 0))
@@ -157,8 +158,8 @@
 (define (update-butterfly b)
   (butterfly-modify-pos
    (if (if (eq? (butterfly-state b) "title")
-	   (> (vx (butterfly-pos b)) 50)
-	   (> (vz (butterfly-pos b)) 0))
+	   (> (vx (butterfly-pos b)) 12) 
+	   (> (vz (butterfly-pos b)) 2)) ;; slightly behind the back plane
        (butterfly-modify-state b "dead")
        (butterfly-modify-t b (+ (butterfly-t b) canvas-delta)))
    (vadd 
@@ -173,7 +174,7 @@
        (butterfly-root b)
        (identity)
        (translate (butterfly-pos b))
-       (translate (vector 0 sa 0))
+       (translate (vector 0 (/ sa 4) 0))
        (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
        (rotate (vector 0 90 -90))
        )
@@ -289,8 +290,8 @@
 	 (build-butterfly type (generate-start-pos type)))
        (build-butterfly 
 	"title" 
-	(vector (+ -100 (* (rndf) 50)) 
-		(* (crndf) 50) 0)))))
+	(vector (+ -10 (* (rndf) 5)) 
+		(* (crndf) 5) -10)))))
 
 (define (butterfly-birth b mode)
   (filter
@@ -324,7 +325,6 @@
 
 (define (set-background img)
   (js "$('#webgl-canvas').css('background-image', 'url('+img+')');"))
-
 
 (define (shuffle-background)
   (set-background (choose (list "images/bg-01.jpg"
@@ -396,7 +396,7 @@
    (shuffle
     (with-state
      (shader-assign-compiled "default")   
-     (translate (vector 0 -25 0))
+     (translate (vector 0 -25 -40))
      (rotate (vector 0 0 90))
      (scale (vector 20 20 20))
      (ls-build (ls-generate 5 "A" (list 
@@ -417,7 +417,7 @@
    (shuffle
     (with-state
      (shader-assign-compiled "unlit")   
-     (translate (vector 0 -25 0))
+     (translate (vector 0 -25 -40))
      (rotate (vector 0 0 90))
      (scale (vector 20 20 20))
      (ls-build (ls-generate 6 "A" (list 

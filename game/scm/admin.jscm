@@ -19,18 +19,32 @@
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
+(define admin-version 2)
+
+(define (version-check)
+  (let ((version (string->number (local-load "clearwing-version"))))
+    (when (or (not version)
+	      (< version admin-version))
+	  (msg (string-append "Resetting local data to version " admin-version))
+	  (local-nuke)
+	  (local-save "clearwing-version" admin-version)
+	  )))
+		 
+(version-check)
+
 (local-setup-params 
  "clearwing" 
  (list
   (list "Session ID" 0)
-  (list "Butterfly Speed" 0.5)
+  (list "Butterfly Speed" 0.125)
   (list "Flap Speed" 8)
   (list "Max Population" 10)
   (list "New Butterfly Chance" 0.01)
-  (list "Appearance Area Width" 100)
-  (list "Appearance Area Height" 100)
-  (list "Appearance Depth" -200)
+  (list "Appearance Area Width" 20)
+  (list "Appearance Area Height" 20)
+  (list "Appearance Depth" -40)
   (list "Health Decrease" 7)
   (list "Health Increase" 10)
   (list "Path Variation Degrees" 20)
   ))
+
