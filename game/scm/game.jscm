@@ -257,6 +257,7 @@
 	(string-append "hits-" (local-get-param "clearwing" "Session ID"))
 	(list
 	 save-version
+	 (- (js "new Date()") game-start-time)
 	 (local-get-param "clearwing" "Session ID")
 	 (butterfly-id b)
 	 (butterfly-state b)
@@ -273,7 +274,8 @@
 	 (vz (butterfly-dir b))
 	 (butterfly-t b)
 	 (butterfly-jitter b)
-	 ""
+	 current-background
+	 current-plant-seed
 	 ))
        (butterfly-modify-state b "dead"))
       (else b)))
@@ -359,8 +361,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (set-background img)
-  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');")
-  )
+  (set! current-background img)
+  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');"))
 
 (define (shuffle-background)
   (set-background (choose (list "images/bg-01.jpg"
@@ -620,6 +622,8 @@
 (define butterflies '())
 (define leaf-obj 0)
 (define tree-root 0)
+(define current-plant-seed 0)
+(define current-bg-image 0)
 
 (define trees '())
 
@@ -657,6 +661,26 @@
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
 
+    (set! seed (foldl (lambda (i r) (string-append r i)) 
+		      ""
+		      (build-list 20 (lambda (_) (random 10)))))
+    
+    (set! reseeed (rndf))
+    (define seeds (list "one" 
+			"71016562679325265622" 
+			"10994801477592654110"
+			"55999618436612302696"
+			"56368532757824931962"
+			"19020405703337933236"
+			"08685588002554564547"
+			"35622594592923537813"
+			"10696066169979244499"
+			"23282390091090871726"
+			"53059426701815948700"
+			"64763880626676799924"))
+    (set! current-plant-seed (choose seeds))
+    (Math.seedrandom current-plant-seed)
+    ;;(msg seed)
     (with-state
      (parent game-root)
      (set! trees (list 		  
@@ -664,8 +688,10 @@
 		  (build-plant centre-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  (build-plant right-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  ))
-     (set! butterflies '())))
-
+     (set! butterflies '()))
+    (Math.seedrandom reseeed)
+    )
+   
    ((eq? game-mode "end")
     (set-background "images/bg.jpg")
     (set! new-butterfly-chance 0.05)
@@ -743,7 +769,7 @@
     ;;   butterflies)
     
     (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
-    ;;(draw-health ctx 450 30 health 100)
+    (draw-health ctx 450 30 health 100)
 
     (set! hint-time (+ hint-time 0.1))
 
@@ -821,7 +847,6 @@
 (resize-glcanvas webgl-canvas)
 (resize-canvas canvas)
 (set-camera-angle 53)
-(Math.seedrandom "one")
 (ctx.fillText "Loading..." 100 100)
 
 (every-frame (start))
