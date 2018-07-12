@@ -66,8 +66,8 @@
 (define (butterfly-dir b) (list-ref b 4))
 (define (butterfly-modify-dir b v) (list-replace b 4 v))
 (define (butterfly-root b) (list-ref b 5))
-(define (butterfly-left-wing b) (list-ref b 6))
-(define (butterfly-right-wing b) (list-ref b 7))
+(define (butterfly-right-wing b) (list-ref b 6))
+(define (butterfly-left-wing b) (list-ref b 7))
 (define (butterfly-jitter b) (list-ref b 8))
 (define (butterfly-t b) (list-ref b 9))
 (define (butterfly-modify-t b v) (list-replace b 9 v))
@@ -92,7 +92,8 @@
 	    (texture (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
 	    ;; wings are approx 2.5 cm wide
 	    (scale (vector 2.5 2.5 2.5))
-	    (hint-nozwrite)
+	    ;;(hint-nozwrite)
+	    (hint-cullface)
 	    (make-butterfly
 	     (butterfly-generate-id)
 	     type
@@ -128,6 +129,7 @@
        (rotate (vector 45 0 0))
        (scale (vector 1 2.5 2.5))
        ;;(hint-nozwrite)
+       (hint-cullface)
        (with-state
 	(translate (vector 0.24 0 0))
 	(load-primitive "models/plane.obj"))
@@ -357,12 +359,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (set-background img)
-  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');"))
+  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');")
+  )
 
 (define (shuffle-background)
   (set-background (choose (list "images/bg-01.jpg"
 				"images/bg-02.jpg"
-				"images/bg-03.jpg"))))
+				"images/bg-03.jpg"
+				"images/bg-04.jpg"
+				"images/bg-05.jpg"
+				"images/bg-06.jpg"
+				"images/bg-07.jpg"
+				))))
   
 (define (animate-trees tree)
   (for-each 
@@ -371,7 +379,9 @@
       (lambda (p)
 	(with-primitive 
 	 p
-	 (rotate (vector 0 0 (* 0.1 (cos (* 1 (* 0.5 (+ 1 (modulo p 5)) (time)))))))))
+	 (rotate (vector (* 0.1 (cos (* 1 (* 0.5 (+ 1 (modulo p 5)) (time))
+					)))
+			 0 0))))
       tree))
    trees))
 
@@ -385,6 +395,10 @@
 (shader-compile "unlit" (list "p" "n" "t" "c")
 		"shaders/unlit.vert"
 		"shaders/unlit.frag")
+
+(shader-compile "leaf" (list "p" "n" "t" "c")
+		"shaders/leaf.vert"
+		"shaders/leaf.frag")
 
 (load-texture "hypolaria-w-014.png")
 (load-texture "hypolaria-b-014.png")
@@ -402,75 +416,209 @@
  (lambda (t)
    (load-texture t))
  (list
-  "plants/branch-0-00.png"
-  "plants/branch-0-01.png"
-  "plants/leaf-0-00.png"
-  "plants/leaf-0-01.png"
-  "plants/leaf-0-02.png"
-  "plants/branch-1-00.png"
-  "plants/leaf-1-00.png"
-  "plants/leaf-1-01.png"
-  "plants/leaf-1-02.png"))
+    "plants/1-1.png"
+
+    "plants/2-1.png"
+    "plants/2-2.png"
+    "plants/2-3.png"
+
+    "plants/3-1.png"
+    "plants/3-2.png"
+    "plants/3-3.png"
+    "plants/3-4.png"
+    "plants/3-5.png"
+
+    "plants/4-1.png"
+    "plants/4-2.png"
+    "plants/4-3.png"
+    "plants/4-4.png"
+
+    "plants/5-1.png"
+    "plants/5-2.png"
+    "plants/5-3.png"
+    "plants/5-4.png"
+    "plants/5-5.png"
+    "plants/5-6.png"
+    "plants/5-7.png"
+    "plants/5-8.png"
+    "plants/5-9.png"
+
+    "plants/eden1-1.png"
+    
+    "plants/eden2-1.png"
+    "plants/eden2-2.png"
+    "plants/eden2-3.png"
+    "plants/eden2-4.png"
+    "plants/eden2-5.png"
+
+    "plants/eden3-1.png"
+    "plants/eden3-2.png"
+    "plants/eden3-3.png"
+
+    "plants/eden4-1.png"
+    "plants/eden4-2.png"
+    "plants/eden4-3.png"
+
+    "plants/eden5-1.png"
+    "plants/eden5-2.png"
+    "plants/eden5-3.png"
+
+    "plants/eden6-1.png"
+    "plants/eden6-2.png"
+
+    "plants/eden7-1.png"
+    "plants/eden7-2.png"
+    "plants/eden7-3.png"
+
+    "plants/stem 1.png"
+    "plants/stem 2.png"
+    "plants/stem 3.png"
+    "plants/stem 4.png"
+    "plants/stem 5.png"
+    "plants/stem 6.png"
+    "plants/stem 7.png"
+    "plants/stem 8.png"
+    "plants/stem 9.png"
+    "plants/stem 10.png"
+    "plants/stem 11.png"
+    ))
    
 (load-mesh-cache "models/plane.obj")
-(load-mesh-cache "models/lsys-plane.obj")
 (load-mesh-cache "models/lsys-plane2.obj")
 
 (load-images!
  (list
+  "bg-01.jpg"
+  "bg-02.jpg"
+  "bg-03.jpg"
+  "bg-04.jpg"
+  "bg-05.jpg"
+  "bg-06.jpg"
+  "bg-07.jpg"				
   "health.png")
  (lambda ()
    0))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (build-tree)
-  (crop
-   (shuffle
-    (with-state
-     (shader-assign-compiled "default")   
-     (translate (vector 0 -25 -40))
-     (rotate (vector 0 0 90))
-     (scale (vector 20 20 20))
-     (ls-build (ls-generate 5 "A" (list 
-				   (list "A" "a[+A^b][&&d][&Ac]")
-				   ))
-	       20 20 20 0.85 70 leaf-obj2
-	       (list 
-		"plants/branch-1-00.png"
-		"plants/2-1.png"
-		"plants/2-2.png"
-		"plants/2-3.png"
-		)
-	       (vector 1 1 1))))
-   30))
+(define (build-plant pos desc textures)
+  (let ((depth (list-ref desc 0))
+	(rot (list-ref desc 1))
+	(rules (list-ref desc 2)))
+    (msg desc)
+    (crop
+     (shuffle
+      (with-state
+       (hint-cullface)
+       (shader-assign-compiled "leaf")   
+       (translate pos)
+       (rotate (vector 0 0 90))
+       (scale (vector 40 40 40))
+       (ls-build (ls-generate depth "A" rules)
+		 (vx rot) (vy rot) (vz rot) 0.80 depth leaf-obj
+		 textures (vector 1 1 1))))
+     30)))
 
-(define (build-tree2)
-  (crop
-   (shuffle
-    (with-state
-     (shader-assign-compiled "unlit")   
-     (translate (vector 0 -25 -40))
-     (rotate (vector 0 0 90))
-     (scale (vector 20 20 20))
-     (ls-build (ls-generate 6 "A" (list 
-				   (list "A" "a[^Ad][&&b][&Ac]")
-				   ))
-	       20 20 20 0.85 70 leaf-obj
-	       (list 
-		"plants/branch-1-00.png"
-		"plants/leaf-1-00.png"
-		"plants/leaf-1-01.png"
-		"plants/leaf-1-02.png")
-	       (vector 1 1 1))))
-   30))
+(define left-plant-pos (vector -60 -100 -180))
+(define centre-plant-pos (vector 0 -150 -180))
+(define right-plant-pos (vector 60 -100 -180))
+
+(define plant-rules 
+  (list
+   (list ;; messy squat tree
+    4 (vector 7 25 35)
+    (list 
+     (list "b" "fc-[aad]++fb")
+     (list "A" "a[+A]//[-A]//[aAb]")))
+   (list ;; climber 
+    7 
+    (vector 17 25 25)
+    (list 
+     (list "B" "aa[+b]d[-c]")
+     (list "A" "aa-a+[--B][+++B]+/[A]")))
+   (list ;; twisty tree
+    6 
+    (vector 45 5 35)
+    (list 
+     (list "A" "a[+^A&a//d]/aa[--ab][-Aa//c]")
+     ))
+   (list ;; shrub
+    5 
+    (vector 17 15 15)
+    (list 
+     (list "B" "[a+aa++b[f&A][f^A]]")
+     (list "A" "B/A/A")
+     ))))
+
+(define plant-texture-sets 
+  (list
+   (list 
+    "plants/stem 11.png"
+    "plants/eden7-1.png"
+    "plants/eden7-2.png"
+    "plants/eden7-3.png"
+    )
+   (list 
+    "plants/stem 6.png"
+    "plants/eden6-1.png"
+    "plants/eden6-2.png"
+    "plants/eden6-2.png"
+    )
+   (list 
+    "plants/stem 5.png"
+    "plants/eden5-1.png"
+    "plants/eden5-2.png"
+    "plants/eden5-3.png"
+    )
+   (list 
+    "plants/stem 4.png"
+    "plants/eden4-1.png"
+    "plants/eden4-2.png"
+    "plants/eden4-3.png"
+    )
+   (list 
+    "plants/stem 4.png"
+    "plants/eden3-1.png"
+    "plants/eden3-2.png"
+    "plants/eden3-3.png"
+    )
+   (list 
+    "plants/stem 4.png"
+    "plants/eden1-1.png"
+    "plants/eden1-1.png"
+    "plants/eden1-1.png"
+    )
+   (list 
+    "plants/stem 3.png"
+    "plants/5-1.png"
+    "plants/5-2.png"
+    "plants/5-3.png"
+    )
+   (list 
+    "plants/stem 1.png"
+    "plants/4-1.png"
+    "plants/4-2.png"
+    "plants/4-3.png"
+    )
+   (list 
+    "plants/stem 2.png"
+    "plants/3-1.png"
+    "plants/3-2.png"
+    "plants/3-3.png"
+    )
+   (list 
+    "plants/stem 2.png"
+    "plants/eden7-1.png"
+    "plants/eden7-2.png"
+    "plants/eden7-3.png"
+    )
+   ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define init #f)
 (define butterflies '())
 (define leaf-obj 0)
-(define leaf-obj2 0)
 (define tree-root 0)
 
 (define trees '())
@@ -511,20 +659,11 @@
 
     (with-state
      (parent game-root)
-     (set! trees (list
-		  (with-state
-		   (translate (vector -10 -6 0))
-		   (build-tree))
-		  ;; (with-state
-		  ;; 	(translate (vector 0 -6 0))
-		  ;; 	(build-tree))
-		  ;; (with-state
-		  ;; 	(translate (vector 10 -6 0))
-		  ;; 	(build-tree))
-		 (with-state
-		  (scale (vector 0.5 0.5 0.5))
-		  (translate (vector 25 -10 0))
-		  (build-tree2))))
+     (set! trees (list 		  
+		  (build-plant left-plant-pos (choose plant-rules) (choose plant-texture-sets))
+		  (build-plant centre-plant-pos (choose plant-rules) (choose plant-texture-sets))
+		  (build-plant right-plant-pos (choose plant-rules) (choose plant-texture-sets))
+		  ))
      (set! butterflies '())))
 
    ((eq? game-mode "end")
@@ -604,7 +743,7 @@
     ;;   butterflies)
     
     (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
-    (draw-health ctx 450 30 health 100)
+    ;;(draw-health ctx 450 30 health 100)
 
     (set! hint-time (+ hint-time 0.1))
 
@@ -655,16 +794,27 @@
 	  )
 	 (set! init #t)
 	 (set! game-mode "title")
-
 	 (set! leaf-obj (with-state 
 			 (translate (vector 1000 0 0)) 
-			 (load-primitive "models/lsys-plane.obj")))
-	 (set! leaf-obj2 (with-state 
-			  (translate (vector 1000 0 0)) 
-			  (load-primitive "models/lsys-plane2.obj")))
+			 (load-primitive "models/lsys-plane2.obj")))
 	 (run-init)	 
+
+	  ;; (define p 
+	  ;;   (with-state 
+	  ;;    (hint-cullface)
+	  ;;    (shader-assign-compiled "default")   
+	  ;;    (scale (vector 0.05 0.05 0.05))
+	  ;;    (texture (load-texture "plants/eden2-1.png"))
+	  ;;    (translate (vector 0 -1 -5))
+	  ;;    (rotate (vector 45 45 45))
+	  ;;    (load-primitive "models/lsys-plane2.obj")))
+
 	 (clear-colour (list 0.0 0.0 0.0 0.0))
-	 (every-frame render-game)))
+	 (every-frame render-game)
+	 ;;(every-frame (with-primitive p (rotate (vector 0 2 0))))
+	 
+	 
+	 ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -31,6 +31,8 @@ resources = [
     
     "shaders/default.vert",
     "shaders/default.frag",
+    "shaders/leaf.vert",
+    "shaders/leaf.frag",
     "shaders/unlit.vert",
     "shaders/unlit.frag",
 
@@ -44,20 +46,71 @@ resources = [
     "textures/tree.png",
     "textures/butterfly-01.png",
 
-    "textures/plants/branch-0-00.png",
-    "textures/plants/branch-0-01.png",
-    "textures/plants/leaf-0-00.png",
-    "textures/plants/leaf-0-01.png",
-    "textures/plants/leaf-0-02.png",
-
-    "textures/plants/branch-1-00.png",
-    "textures/plants/leaf-1-00.png",
-    "textures/plants/leaf-1-01.png",
-    "textures/plants/leaf-1-02.png",
+    "textures/plants/1-1.png",
 
     "textures/plants/2-1.png",
     "textures/plants/2-2.png",
     "textures/plants/2-3.png",
+
+    "textures/plants/3-1.png",
+    "textures/plants/3-2.png",
+    "textures/plants/3-3.png",
+    "textures/plants/3-4.png",
+    "textures/plants/3-5.png",
+
+    "textures/plants/4-1.png",
+    "textures/plants/4-2.png",
+    "textures/plants/4-3.png",
+    "textures/plants/4-4.png",
+
+    "textures/plants/5-1.png",
+    "textures/plants/5-2.png",
+    "textures/plants/5-3.png",
+    "textures/plants/5-4.png",
+    "textures/plants/5-5.png",
+    "textures/plants/5-6.png",
+    "textures/plants/5-7.png",
+    "textures/plants/5-8.png",
+    "textures/plants/5-9.png",
+
+    "textures/plants/eden1-1.png",
+    
+    "textures/plants/eden2-1.png",
+    "textures/plants/eden2-2.png",
+    "textures/plants/eden2-3.png",
+    "textures/plants/eden2-4.png",
+    "textures/plants/eden2-5.png",
+
+    "textures/plants/eden3-1.png",
+    "textures/plants/eden3-2.png",
+    "textures/plants/eden3-3.png",
+
+    "textures/plants/eden4-1.png",
+    "textures/plants/eden4-2.png",
+    "textures/plants/eden4-3.png",
+
+    "textures/plants/eden5-1.png",
+    "textures/plants/eden5-2.png",
+    "textures/plants/eden5-3.png",
+
+    "textures/plants/eden6-1.png",
+    "textures/plants/eden6-2.png",
+
+    "textures/plants/eden7-1.png",
+    "textures/plants/eden7-2.png",
+    "textures/plants/eden7-3.png",
+
+    "textures/plants/stem 1.png",
+    "textures/plants/stem 2.png",
+    "textures/plants/stem 3.png",
+    "textures/plants/stem 4.png",
+    "textures/plants/stem 5.png",
+    "textures/plants/stem 6.png",
+    "textures/plants/stem 7.png",
+    "textures/plants/stem 8.png",
+    "textures/plants/stem 9.png",
+    "textures/plants/stem 10.png",
+    "textures/plants/stem 11.png",
 
     "textures/hypolaria-w-014.png",
     "textures/hypolaria-b-014.png",
@@ -67,7 +120,6 @@ resources = [
     "textures/ithomia-b-013.png",
 
     "models/plane.obj",
-    "models/lsys-plane.obj",
     "models/lsys-plane2.obj",
 
     "scm/lsys.jscm",

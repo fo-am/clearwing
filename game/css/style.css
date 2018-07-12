@@ -22,7 +22,7 @@ body {
 }
 
 #webgl-canvas {
-    background: url('../images/bg.jpg'); 
+    background: #fff; 
     position: absolute; 
     left: 0px; 
     top: 0px; 
