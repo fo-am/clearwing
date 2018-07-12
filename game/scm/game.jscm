@@ -15,6 +15,7 @@
 (define current-butterfly-id 0)
 (define flap-speed (local-get-param "clearwing" "Flap Speed"))
 (define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
+(msg butterfly-speed)
 
 (define health 100)
 (define health-dec (string->number (local-get-param "clearwing" "Health Decrease")))
