@@ -44,7 +44,6 @@ resources = [
     "textures/grass.png",
     "textures/test-grey.png", 
     "textures/tree.png",
-    "textures/butterfly-01.png",
 
     "textures/plants/1-1.png",
 
@@ -111,13 +110,32 @@ resources = [
     "textures/plants/stem 9.png",
     "textures/plants/stem 10.png",
     "textures/plants/stem 11.png",
+ 
+    "textures/ceratinia-b.png",
+    "textures/ceratinia-w-5.png",
+    "textures/ceratinia-w-6.png",
+    "textures/ceratinia-w-7.png",
+    "textures/ceratinia-w-8.png",
+    "textures/ceratinia-w-9.png",
+    "textures/ceratinia-w-10.png",
+    "textures/ceratinia-w-11.png",
+    "textures/ceratinia-w-12.png",
 
+    "textures/hypolaria-b.png",
     "textures/hypolaria-w-014.png",
-    "textures/hypolaria-b-014.png",
+    "textures/hypolaria-w-015.png",
+    "textures/hypolaria-w-016.png",
+    "textures/hypolaria-w-017.png",
+
+    "textures/hypothyris-b.png",
+    "textures/hypothyris-w-014.png",
+    "textures/hypothyris-w-015.png",
+    "textures/hypothyris-w-016.png",
     "textures/hypothyris-w-017.png",
-    "textures/hypothyris-b-017.png",
+
+    "textures/ithomia-b.png",
+    "textures/ithomia-w-012.png",
     "textures/ithomia-w-013.png",
-    "textures/ithomia-b-013.png",
 
     "models/plane.obj",
     "models/lsys-plane2.obj",

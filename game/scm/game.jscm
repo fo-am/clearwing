@@ -95,8 +95,9 @@
 	    (texture (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
 	    ;; wings are approx 2.5 cm wide
 	    (scale (vector butterfly-scale butterfly-scale butterfly-scale))
-	    ;;(hint-nozwrite)
+	    (hint-nozwrite)
 	    (hint-cullface)
+	    
 	    (make-butterfly
 	     (butterfly-generate-id)
 	     type
@@ -130,17 +131,17 @@
       (with-state
        (shader-assign-compiled "default")   
        (parent root)
-       (texture (load-texture (string-append (car type) "-b-" (cadr type) ".png")))
+       (texture (load-texture (string-append (car type) "-b.png")))
        (rotate (vector 45 0 0))
        (scale (vector 1 butterfly-scale butterfly-scale))
-       ;;(hint-nozwrite)
+       (hint-nozwrite)
        (hint-cullface)
        (with-state
 	(translate (vector 0.24 0 0))
 	(load-primitive "models/plane.obj"))
        
        (with-state
-	(scale (vector -1 1 1))
+	(rotate (vector 0 180 0))
 	(translate (vector 0.24 0 0))
 	(load-primitive "models/plane.obj")))
       
@@ -161,7 +162,7 @@
 (define (generate-start-pos state)
   (cond 
    ((eq? state "title")
-    (vector (+ -30 (* (rndf) 5)) (* (crndf) 10) -20))
+    (vector (+ -30 (* (rndf) 5)) (* (crndf) 15) -20))
    ((eq? state "circle")
     (vector (* (crndf) appearance-area-w) 
 	    (* (crndf) appearance-area-h) 
@@ -351,7 +352,7 @@
    (lambda (b)
      (update-butterfly b))
    (butterfly-birth 
-    (if canvas-mouse-clicked
+    (if (and canvas-mouse-clicked (eq? mode "game"))
 	(begin
 	  (set! canvas-mouse-clicked #f)
 	  (butterfly-detect-hits b butterfly-hit))
@@ -429,17 +430,22 @@
 		"shaders/leaf.vert"
 		"shaders/leaf.frag")
 
-(load-texture "hypolaria-w-014.png")
-(load-texture "hypolaria-b-014.png")
-(load-texture "hypothyris-w-017.png")
-(load-texture "hypothyris-b-017.png")
+(load-texture "ceratinia-b.png")
+(load-texture "hypolaria-b.png")
+(load-texture "hypothyris-b.png")
+(load-texture "ithomia-b.png")
+
+(for-each 
+ (lambda (type)
+   (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
+ butterfly-types)
+
 (load-texture "shrub.png")
 (load-texture "test.png")
 (load-texture "white.png")
 (load-texture "grass.png")
 (load-texture "test-grey.png")
 (load-texture "tree.png")
-(load-texture "butterfly-01.png")
 
 (for-each 
  (lambda (t)
@@ -737,13 +743,15 @@
       (set! title-text 
 	    (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
 			  (list "Thankyou for playing")))
-      (set! info-text 
-	    (make-textbox 
-	     (/ screen-width 2) 300 "20pt" 40 "left" 
-	     (list 
-	      (string-append "You lasted " time-taken " seconds.")
-	      (string-append "Caught " butterflies-caught " butterflies.") 
-	      "This score puts you in xx place today."))))
+
+      (let ((score (score-position (local-get-param "clearwing" "Session ID"))))
+	(set! info-text 
+	      (make-textbox 
+	       (/ screen-width 2) 300 "20pt" 40 "left" 
+	       (list 
+		(string-append "You lasted " time-taken " seconds.")
+		(string-append "Caught " butterflies-caught " butterflies.") 
+		(string-append "This score puts you in position " (car score) " out of " (cadr score) " games today."))))))
     
     (set! button-a (make-text-button 
 		    (vector (- (/ screen-width 2) 200) 420 0) 

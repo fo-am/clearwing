@@ -63,15 +63,55 @@
        (c.append (butterfly-form name selected)))
      butterfly-types)))
 
+(define (score-id s) (list-ref s 0))
+(define (score-time-taken s) (list-ref s 1))
+(define (score-butterflies-caught s) (list-ref s 2))
+
+(define (score-position session-id)
+  (let ((scores (local-load "clearwing-score")))
+    (list
+     (cadr 
+      (foldl
+       (lambda (score r)
+	 (cond 
+	  ((car r) r)
+	  ((eq? (score-id score) session-id) (list #t (+ (cadr r) 1))) 
+	  (else (list #f (+ (cadr r) 1)))))
+       (list #f 0)
+       (scores.sort 
+	(lambda (a b) (- (score-time-taken b) 
+			 (score-time-taken a))))))
+     (length scores))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		 
 (version-check)
 
 (define butterfly-types    
   (list
+   (list "ceratinia" "5")
+   (list "ceratinia" "6")
+   (list "ceratinia" "7")
+   (list "ceratinia" "8")
+   (list "ceratinia" "9")
+   (list "ceratinia" "10")
+   (list "ceratinia" "11")
+   (list "ceratinia" "12")
+
    (list "hypolaria" "014")
+   (list "hypolaria" "015")
+   (list "hypolaria" "016")
+   (list "hypolaria" "017")
+   
+   (list "hypothyris" "014")
+   (list "hypothyris" "015")
+   (list "hypothyris" "016")
    (list "hypothyris" "017")
-   (list "ithomia" "013")))
+   
+   (list "ithomia" "012")
+   (list "ithomia" "013")
+
+   ))
 
 (setup-morph-interface)
 
@@ -84,7 +124,7 @@
   (list "Max Population" 10)
   (list "Starting Population" 5)
   (list "New Butterfly Chance" 0.01)
-  (list "Appearance Area Width" 300)
+  (list "Appearance Area Width" 250)
   (list "Appearance Area Height" 100)
   (list "Appearance Depth" -200)
   (list "Health Decrease" 7)
