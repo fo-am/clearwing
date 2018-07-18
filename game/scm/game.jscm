@@ -15,7 +15,6 @@
 (define current-butterfly-id 0)
 (define flap-speed (local-get-param "clearwing" "Flap Speed"))
 (define butterfly-speed (local-get-param "clearwing" "Butterfly Speed"))
-(msg butterfly-speed)
 
 (define health 100)
 (define health-dec (string->number (local-get-param "clearwing" "Health Decrease")))
@@ -33,6 +32,9 @@
 (define radians-per-degree 0.0174533)
 (define butterfly-dir-var (* radians-per-degree (string->number (local-get-param "clearwing" "Path Variation Degrees"))))
 (define hit-leeway (string->number (local-get-param "clearwing" "Hit Leeway Pixels")))
+(define butterfly-start-num (local-get-param "clearwing" "Starting Population"))
+(define butterfly-wing-size (local-get-param "clearwing" "Butterfly wing size CM"))
+(define butterfly-scale (* butterfly-wing-size 2)) ;; plane.obj is 0.5 units wide
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -92,7 +94,7 @@
 	    (parent root)
 	    (texture (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
 	    ;; wings are approx 2.5 cm wide
-	    (scale (vector 2.5 2.5 2.5))
+	    (scale (vector butterfly-scale butterfly-scale butterfly-scale))
 	    ;;(hint-nozwrite)
 	    (hint-cullface)
 	    (make-butterfly
@@ -114,8 +116,10 @@
 	      (cond 
 	       ((eq? state "title")
 		(vector butterfly-speed 0 0))
-	       (else 
-		(vector 0 0 butterfly-speed))))
+	       (else
+		;; aim at the camera at 0,0,0
+		(vmul (vnormalise (vsub (vector 0 0 0) pos)) 
+		      butterfly-speed))))
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
@@ -128,7 +132,7 @@
        (parent root)
        (texture (load-texture (string-append (car type) "-b-" (cadr type) ".png")))
        (rotate (vector 45 0 0))
-       (scale (vector 1 2.5 2.5))
+       (scale (vector 1 butterfly-scale butterfly-scale))
        ;;(hint-nozwrite)
        (hint-cullface)
        (with-state
@@ -157,7 +161,7 @@
 (define (generate-start-pos state)
   (cond 
    ((eq? state "title")
-    (vector (+ -15 (* (rndf) 5)) (* (crndf) 5) -10))
+    (vector (+ -30 (* (rndf) 5)) (* (crndf) 10) -20))
    ((eq? state "circle")
     (vector (* (crndf) appearance-area-w) 
 	    (* (crndf) appearance-area-h) 
@@ -174,7 +178,7 @@
 	      (eq? (butterfly-state b) "circle")
 	      (> (butterfly-t b) butterfly-circle-timeout))
 	     (if (eq? (butterfly-state b) "title")
-		 (> (vx (butterfly-pos b)) 12) 
+		 (> (vx (butterfly-pos b)) 24) 
 		 ;; slightly behind the back plane
 		 (> (vz (butterfly-pos b)) 2)))
 	 (butterfly-modify-state b "dead")
@@ -221,9 +225,10 @@
    (vx
     (with-primitive 
      (butterfly-root b) 
-     (vsub 
-      (project-point (mtransform (get-transform) (vector 2.5 0 0)))
-      (project-point (mtransform (get-transform) (vector 0 0 0))))))))
+     (let ((centre (mtransform (get-transform) (vector 0 0 0))))
+       (vsub 
+	(project-point (vadd centre (vector butterfly-wing-size 0 0)))
+	(project-point (vadd centre (vector -butterfly-wing-size 0 0)))))))))
 
 (define (butterfly-detect-hits butterfly-list fn)
   ;; find closest index
@@ -358,6 +363,27 @@
    (lambda (b)
      (animate-butterfly! b t))
    b))
+
+(define (draw-debug butterflies)
+  (for-each
+   (lambda (b)
+     (let ((p (butterfly-screen-pos b)))
+       (with-primitive 
+	(butterfly-root b) 
+	(let ((centre (mtransform (get-transform) (vector 0 0 0))))
+	  (let ((start (project-point (vadd centre (vector butterfly-wing-size 0 0))))
+		(end (project-point (vadd centre (vector -butterfly-wing-size 0 0)))))
+	    (draw-line (vx start) (vy start)
+		       (vx end) (vy end))	      
+	    )))
+
+       (set! ctx.font (string-append "10pt Arial"))
+
+       (ctx.fillText
+	(string-append "" (floor (butterfly-screen-size b)))
+	(vx p) (vy p))
+       (canvas-init-defaults)))     
+   butterflies))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -689,8 +715,11 @@
 		  (build-plant centre-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  (build-plant right-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  ))
-     (set! butterflies '()))
-    (Math.seedrandom reseeed)
+     (Math.seedrandom reseeed)
+     (set! butterflies 
+	   (build-list 
+	    butterfly-start-num 
+	    (lambda (_) (build-new-butterfly game-mode)))))
     )
    
    ((eq? game-mode "end")
@@ -761,13 +790,7 @@
     (ctx.clearRect 0 0 screen-width screen-height)	  
     (draw-gobble ctx)
 
-    ;;(for-each
-    ;; (lambda (b)
-    ;;   (let ((p (butterfly-screen-pos b)))
-    ;;	 (ctx.fillText
-    ;;	  (string-append "" (butterfly-screen-size b))
-    ;;	  (vx p) (vy p))))
-    ;;   butterflies)
+    ;;(draw-debug butterflies)
     
     (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
     (draw-health ctx 450 30 health 100)
