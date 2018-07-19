@@ -135,7 +135,7 @@
   (list "Health Increase" 10)
   (list "Max Population" 10)
   (list "Starting Population" 5)
-  (list "New Butterfly Chance" 0.03)
+  (list "New Butterfly Chance" 0.01)
   (list "Butterfly Speed" 0.125)
   (list "Flap Speed" 8)
   (list "Max Appearance Depth" -200)
