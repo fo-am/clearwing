@@ -38,6 +38,7 @@
 		      ((eq? "e" char) (list-ref textures 4))
 		      (else (list-ref textures 6)))))	    
 		   (hint-nozwrite)
+		   ;;(hint-cullface)
 		   (colour col)
 		   (scale (vector 0.3 0.3 0.3))
 		   (rotate (vector 0 0 -90))

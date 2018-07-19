@@ -24,9 +24,8 @@
 (define game-start-time 0)
 (define max-population (string->number (local-get-param "clearwing" "Max Population")))
 (define new-butterfly-chance (string->number (local-get-param "clearwing" "New Butterfly Chance")))
-(define appearance-area-w (string->number (local-get-param "clearwing" "Appearance Area Width")))
-(define appearance-area-h (string->number (local-get-param "clearwing" "Appearance Area Height")))
-(define appearance-depth (string->number (local-get-param "clearwing" "Appearance Depth")))
+(define max-appearance-depth (string->number (local-get-param "clearwing" "Max Appearance Depth")))
+(define min-appearance-depth (string->number (local-get-param "clearwing" "Min Appearance Depth")))
 (define butterfly-circle-speed (string->number (local-get-param "clearwing" "Circle Speed")))
 (define butterfly-circle-timeout (string->number (local-get-param "clearwing" "Circle Timeout Seconds")))
 (define radians-per-degree 0.0174533)
@@ -35,6 +34,10 @@
 (define butterfly-start-num (local-get-param "clearwing" "Starting Population"))
 (define butterfly-wing-size (local-get-param "clearwing" "Butterfly wing size CM"))
 (define butterfly-scale (* butterfly-wing-size 2)) ;; plane.obj is 0.5 units wide
+(define fade-in-time 3)
+
+(msg max-appearance-depth)
+(msg min-appearance-depth)
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -53,10 +56,23 @@
     (ctx.fillRect (+ x 50) (+ y 30) (* h 245) 37)
     (ctx.drawImage (find-image "health.png" image-lib) x y)))
 
+(define (draw-hearts ctx x y t max-t)
+  (define (draw-heart-array n xx flash)
+    (when (not (zero? n))
+	  (when (or (not (eq? n 1))
+		    (not flash)
+		    (< (modulo (* (time) 10) 2) 1))
+		(ctx.drawImage (find-image "heart.png" image-lib) xx y))
+	  (draw-heart-array (- n 1) (+ xx 50) flash)))
+  (let ((num-hearts 10))
+    (let ((h (* (/ t max-t) num-hearts)))
+      (draw-heart-array (floor h) (- x (/ (* 10 50) 2)) (< (modulo h 1) 0.5)))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-butterfly id type state pos dir root left-wing right-wing jitter t)
-  (list id type state pos dir root left-wing right-wing jitter t))
+(define (make-butterfly id type state pos dir root left-wing right-wing jitter t born-time)
+  (list id type state pos dir root left-wing right-wing jitter t born-time))
 
 (define (butterfly-id b) (list-ref b 0))
 (define (butterfly-modify-id b v) (list-replace b 0 v))
@@ -74,6 +90,7 @@
 (define (butterfly-jitter b) (list-ref b 8))
 (define (butterfly-t b) (list-ref b 9))
 (define (butterfly-modify-t b v) (list-replace b 9 v))
+(define (butterfly-born-time b) (list-ref b 10))
 
 (define (destroy-butterfly b)
   (destroy (butterfly-root b)))
@@ -91,11 +108,12 @@
     (let ((ret
 	   (with-state
 	    (shader-assign-compiled "default")   
+	    ;;(shader-uniform! "opacity" "f" 0.0)
 	    (parent root)
 	    (texture (load-texture (string-append (car type) "-w-" (cadr type) ".png")))
 	    ;; wings are approx 2.5 cm wide
 	    (scale (vector butterfly-scale butterfly-scale butterfly-scale))
-	    (hint-nozwrite)
+	    ;;(hint-nozwrite)
 	    (hint-cullface)
 	    
 	    (make-butterfly
@@ -124,9 +142,10 @@
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
-	     (rndf) 0))))
-
-     
+	     (rndf) 0 
+	     (time)))))
+      
+      
       ;; build the body
       (with-state
        (shader-assign-compiled "default")   
@@ -134,7 +153,7 @@
        (texture (load-texture (string-append (car type) "-b.png")))
        (rotate (vector 45 0 0))
        (scale (vector 1 butterfly-scale butterfly-scale))
-       (hint-nozwrite)
+       ;;(hint-nozwrite)
        (hint-cullface)
        (with-state
 	(translate (vector 0.24 0 0))
@@ -159,18 +178,29 @@
        )
       ret)))
 
+(define deg->rad 0.0174533)
+
+(define (opp a d)
+  (* (tan (* deg->rad a)) d))
+
+(define (random-point-frustum angle distance)
+  (let ((aspect (/ screen-width screen-height)))
+    (vector
+     (* (opp (/ angle 2) distance) (* (crndf) 2))
+     (* (opp (/ angle 2 aspect) distance) (* (crndf) 2))
+     distance)))
+
 (define (generate-start-pos state)
   (cond 
    ((eq? state "title")
     (vector (+ -30 (* (rndf) 5)) (* (crndf) 15) -20))
    ((eq? state "circle")
-    (vector (* (crndf) appearance-area-w) 
-	    (* (crndf) appearance-area-h) 
-	    (* (rndf) appearance-depth)))
+    (random-point-frustum (get-camera-angle) 
+			  (+ min-appearance-depth
+			     (* (rndf) (- max-appearance-depth 
+					  min-appearance-depth)))))
    (else
-    (vector (* (crndf) appearance-area-w) 
-	    (* (crndf) appearance-area-h) 
-	    appearance-depth))))
+    (dbg (random-point-frustum (get-camera-angle) max-appearance-depth)))))
 
 (define (update-butterfly b)
   (let ((t (butterfly-t b)))
@@ -199,24 +229,27 @@
       ))))
 
 (define (animate-butterfly! b t)
-  (let ((a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
-    (let ((sa (* -3.5 (- (abs (sin a)) 0.45))))
-      (with-primitive 
-       (butterfly-root b)
-       (identity)
-       (translate (butterfly-pos b))
-       (translate (vector 0 (/ sa 4) 0))
-       (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
-       (rotate (vector 0 90 -90))
-       )
-      (with-primitive 
-       (butterfly-left-wing b)
-       (identity)
-       (rotate (vector 45 (* 45 sa) 0)))
-      (with-primitive 
-       (butterfly-right-wing b)
-       (identity)
-       (rotate (vector 45 (* -45 sa) 0))))))
+    (let (;;(opacity (min (/ (butterfly-t b) fade-in-time) 1))
+	  (a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
+      (let ((sa (* -3.5 (- (abs (sin a)) 0.45))))
+	(with-primitive 
+	 (butterfly-root b)
+	 (identity)
+	 (translate (butterfly-pos b))
+	 (translate (vector 0 (/ sa 4) 0))
+	 (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
+	 (rotate (vector 0 90 -90))
+	 )
+	(with-primitive 
+	 (butterfly-left-wing b)
+	 ;;(shader-uniform! "opacity" "f" opacity)
+	 (identity)
+	 (rotate (vector 45 (* 45 sa) 0)))
+	(with-primitive 
+	 (butterfly-right-wing b)
+	 ;;(shader-uniform! "opacity" "f" opacity)
+	 (identity)
+	 (rotate (vector 45 (* -45 sa) 0))))))
 
 (define (butterfly-screen-pos s)
   (project-point (butterfly-pos s)))
@@ -264,7 +297,9 @@
 	(string-append "hits-" (local-get-param "clearwing" "Session ID"))
 	(list
 	 save-version
-	 (- (js "new Date()") game-start-time)
+	 (time)
+	 (/ (- (js "new Date()") game-start-time) 1000)
+	 (butterfly-born-time b)
 	 (local-get-param "clearwing" "Session ID")
 	 (butterfly-id b)
 	 (butterfly-state b)
@@ -530,7 +565,8 @@
   "bg-05.jpg"
   "bg-06.jpg"
   "bg-07.jpg"				
-  "health.png")
+  "health.png"
+  "heart.png")
  (lambda ()
    0))
 
@@ -664,7 +700,6 @@
   (cond 
    ((eq? game-mode "title")
     (set-background "images/bg.jpg")
-    (advance-session-id)
     (canvas-setup)
     (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
@@ -686,6 +721,7 @@
 		      (run-init)))))
 
    ((eq? game-mode "game")
+    (advance-session-id)
     (set! game-root (build-locator))
     (shuffle-background)
     (set! health 100)
@@ -801,7 +837,8 @@
     ;;(draw-debug butterflies)
     
     (set! health (clamp (- health (* health-dec canvas-delta)) 0 100))
-    (draw-health ctx 450 30 health 100)
+    ;;(draw-health ctx 450 30 health 100)
+    (draw-hearts ctx (/ screen-width 2) 30 health 100)
 
     (set! hint-time (+ hint-time 0.1))
 

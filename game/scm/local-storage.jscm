@@ -9,6 +9,9 @@
 (define (local-load name)
   (JSON.parse (localStorage.getItem name)))
 
+(define (local-delete name)
+  (localStorage.removeItem name))
+
 (define (local-nuke)
   (localStorage.clear))
 
@@ -92,7 +95,6 @@
     (let ((arr (local-load fullname)))
       (local-save fullname (append (if arr (local-load fullname) '()) (list value))))))
 
-
 ;; utils
 
 (define (unknown->csv l)
@@ -107,7 +109,7 @@
 	  (list 
 	   (if (< pos (- (length l) 1)) 
 	       (string-append (car r) (unknown->csv i) (if (list? i) "" ","))
-	       (string-append (car r) (unknown->csv i) "\n"))
+	       (string-append (car r) (unknown->csv i) (if (list? i) "" "\n")))
 	   (+ pos 1))))
       (list "" 0) l)))
    (else (msg "unknown-csv no idea what") (msg l) (msg "is..."))))

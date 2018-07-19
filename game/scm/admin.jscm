@@ -10,16 +10,15 @@
      (else
       (if (local-exists? (string-append "clearwing-" (string-append "hits-" n)))
 	  (_ (+ n 1) max 
-	     (string-append
-	      r (local->csv "clearwing" (string-append "hits-" n)) "\\n"))
+	     (string-append r (local->csv "clearwing" (string-append "hits-" n))))
 	  (_ (+ n 1) max r)))))
-  (dbg (_ 0 (local-get-param "clearwing" "Session ID") 
-	  "data-version, game-time, session, butterfly-id, state, type, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background, plant-seed\\n")))
+  (dbg (_ 0 (+ (local-get-param "clearwing" "Session ID") 1) 
+	  "data-version, clock-time, game-time, born-time, session, butterfly-id, state, type, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background, plant-seed\\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
-(define admin-version 3)
+(define admin-version 5)
 
 (define (version-check)
   (let ((version (string->number (local-load "clearwing-version"))))
@@ -83,6 +82,19 @@
 			 (score-time-taken a))))))
      (length scores))))
 
+(define (factory-reset)
+  (when (confirm "Are you sure?")
+	(local-nuke)
+	(location.reload)))
+
+(define (clear-data)
+  (define (_ n)
+    (when (not (zero? n))
+	  (local-delete (string-append "clearwing-hits-" n))
+	  (_ (- n 1))))
+  (when (confirm "Are you sure?")
+	(_ (local-get-param "clearwing" "Session ID"))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		 
 (version-check)
@@ -119,16 +131,15 @@
  "clearwing" 
  (list
   (list "Session ID" 0)
-  (list "Butterfly Speed" 0.125)
-  (list "Flap Speed" 8)
-  (list "Max Population" 10)
-  (list "Starting Population" 5)
-  (list "New Butterfly Chance" 0.01)
-  (list "Appearance Area Width" 250)
-  (list "Appearance Area Height" 100)
-  (list "Appearance Depth" -200)
   (list "Health Decrease" 7)
   (list "Health Increase" 10)
+  (list "Max Population" 10)
+  (list "Starting Population" 5)
+  (list "New Butterfly Chance" 0.03)
+  (list "Butterfly Speed" 0.125)
+  (list "Flap Speed" 8)
+  (list "Max Appearance Depth" -200)
+  (list "Min Appearance Depth" -20)
   (list "Path Variation Degrees" 10)
   (list "Circle Speed" 3)
   (list "Circle Timeout Seconds" 10)
