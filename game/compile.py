@@ -142,7 +142,9 @@ resources = [
 
     "scm/lsys.jscm",
     "scm/local-storage.jscm",
-    "scm/admin.jscm"
+    "scm/admin.jscm",
+    "scm/i18n.jscm",
+    "scm/translations.jscm"
 ]
 
 ################################################

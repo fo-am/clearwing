@@ -6,6 +6,8 @@
 (load "flx/scm/canvas-widgets.jscm")
 (load "scm/lsys.jscm")
 (load "scm/admin.jscm")
+(load "scm/i18n.jscm")
+(load "scm/translations.jscm")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -35,9 +37,7 @@
 (define butterfly-wing-size (local-get-param "clearwing" "Butterfly wing size CM"))
 (define butterfly-scale (* butterfly-wing-size 2)) ;; plane.obj is 0.5 units wide
 (define fade-in-time 3)
-
-(msg max-appearance-depth)
-(msg min-appearance-depth)
+(define toxic-hit-time 1000)
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -251,6 +251,25 @@
 	 (identity)
 	 (rotate (vector 45 (* -45 sa) 0))))))
 
+(define (animate-example-butterfly! b)
+  (with-primitive 
+   (butterfly-root b)
+   (identity)
+   (translate (butterfly-pos b))
+   ;;(translate (vector 0 (/ sa 4) 0))
+   (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
+   (rotate (vector 0 90 -90)))
+  (with-primitive 
+   (butterfly-left-wing b)
+   ;;(shader-uniform! "opacity" "f" opacity)
+   (identity)
+   (rotate (vector 45 0 0)))
+  (with-primitive 
+   (butterfly-right-wing b)
+   ;;(shader-uniform! "opacity" "f" opacity)
+   (identity)
+   (rotate (vector 45 0 0))))
+
 (define (butterfly-screen-pos s)
   (project-point (butterfly-pos s)))
 
@@ -285,43 +304,60 @@
 (define save-version 1)
 
 (define (butterfly-hit butterflies butterfly pos)
-  (set! butterflies-caught (+ butterflies-caught 1))
-  (make-gobble (vx pos) (vy pos) 0 255 0 0.05)
-  (set! health (+ health health-inc))
-  (map
-   (lambda (b)
-     (cond 
-      ((eq? (butterfly-id butterfly) (butterfly-id b))       
-       (local-add-item 
-	"clearwing" 
-	(string-append "hits-" (local-get-param "clearwing" "Session ID"))
-	(list
-	 save-version
-	 (time)
-	 (/ (- (js "new Date()") game-start-time) 1000)
-	 (butterfly-born-time b)
-	 (local-get-param "clearwing" "Session ID")
-	 (butterfly-id b)
-	 (butterfly-state b)
-	 (string-append (car (butterfly-type b)) "-" (cadr (butterfly-type b)))
-	 (butterfly-screen-size b)
-	 (vmag (butterfly-pos b))
-	 (vx pos) 
-	 (vy pos)
-	 (vx (butterfly-pos b))
-	 (vy (butterfly-pos b))
-	 (vz (butterfly-pos b))
-	 (vx (butterfly-dir b))
-	 (vy (butterfly-dir b))
-	 (vz (butterfly-dir b))
-	 (butterfly-t b)
-	 (butterfly-jitter b)
-	 current-background
-	 current-plant-seed
-	 ))
-       (butterfly-modify-state b "dead"))
-      (else b)))
-   butterflies))
+  (let ((type-string (string-append (car (butterfly-type butterfly)) "-" (cadr (butterfly-type butterfly)))))
+    (let ((toxicity (get-toxicity type-string)))
+      (set! butterflies-caught (+ butterflies-caught 1))
+      (cond 
+       ((< toxicity 0) 
+	(set! toxic-hit-time 0)
+	(with-primitive 
+	 (butterfly-left-wing toxic-example)
+	 (texture (load-texture (string-append (car (butterfly-type butterfly)) "-w-" (cadr (butterfly-type butterfly)) ".png"))))
+	(with-primitive 
+	 (butterfly-right-wing toxic-example)
+	 (texture (load-texture (string-append (car (butterfly-type butterfly)) "-w-" (cadr (butterfly-type butterfly)) ".png"))))
+	(make-gobble (vx pos) (vy pos) 255 0 0 0.05))
+       (else 
+	(make-gobble (vx pos) (vy pos) 0 255 0 0.05)))
+      
+      (set! health (+ health (* health-inc toxicity)))
+
+      (local-add-item 
+       "clearwing" 
+       (string-append "hits-" (local-get-param "clearwing" "Session ID"))
+       (list
+	save-version
+	(time)
+	(/ (- (js "new Date()") game-start-time) 1000)
+	(butterfly-born-time butterfly)
+	(local-get-param "clearwing" "Session ID")
+	(butterfly-id butterfly)
+	(butterfly-state butterfly)
+	type-string
+	toxicity
+	(butterfly-screen-size butterfly)
+	(vmag (butterfly-pos butterfly))
+	(vx pos) 
+	(vy pos)
+	(vx (butterfly-pos butterfly))
+	(vy (butterfly-pos butterfly))
+	(vz (butterfly-pos butterfly))
+	(vx (butterfly-dir butterfly))
+	(vy (butterfly-dir butterfly))
+	(vz (butterfly-dir butterfly))
+	(butterfly-t butterfly)
+	(butterfly-jitter butterfly)
+	current-background
+	current-plant-seed
+	))
+
+      (map
+       (lambda (b)
+	 (cond 
+	  ((eq? (butterfly-id butterfly) (butterfly-id b))       	   
+	   (butterfly-modify-state b "dead"))
+	  (else b)))
+       butterflies))))
 
 
 (define (make-gobble x y r g b s)
@@ -423,9 +459,41 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (draw-toxic-bg ctx)
+  (let ((x (/ screen-width 2))
+	(y (/ screen-height 2)))
+    (ctx.beginPath)
+    (ctx.arc x 400 450 0 (* Math.PI 2) true)
+    (ctx.closePath)
+    (let ((grd (ctx.createRadialGradient
+		x 400 100
+		x 400 450)))
+      (grd.addColorStop 0 (string-append "rgba(255, 0, 0, 0.0)"))
+      (grd.addColorStop 1 (string-append "rgba(255, 255, 0, 1.0)"))
+      (set! ctx.fillStyle grd)
+      (ctx.fill))))
+
+
+(define (draw-toxic)
+  (when (eq? toxic-hit-time 0)	
+	(with-primitive (butterfly-root toxic-example) (hide #f)))
+  
+  (when (and (< toxic-hit-time 3))
+	(set! toxic-hit-time (+ toxic-hit-time canvas-delta))
+	(draw-toxic-bg ctx)
+	(set! ctx.fillStyle "#f00")	 
+	(centre-text ctx (mtext-lookup "toxic-2") 
+		     (/ screen-width 2) 550))
+  
+  (when (> toxic-hit-time 3)	
+	(with-primitive (butterfly-root toxic-example) (hide #t))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (set-background img)
   (set! current-background img)
-  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');"))
+  ;;(js "$('#webgl-canvas').css('background-image', 'url('+img+')');")
+  )
 
 (define (shuffle-background)
   (set-background (choose (list "images/bg-01.jpg"
@@ -706,20 +774,38 @@
     (set! butterflies '())
     (set! title-text 
 	  (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
-			(list "Clearwing Butterfly Game")))
+			(list (mtext-lookup "title"))))
     (set! info-text 
 	  (make-textbox (/ screen-width 2) 300 "20pt" 40 "left" 
-			(list "Take part in this citizen science game by" 
-			      "hunting butterflies in the jungle!")))
-
+			(list (mtext-lookup "splash1")
+			      (mtext-lookup "splash2")
+			      )))
+    
     (set! button-a (make-text-button 
 		    (vector (/ screen-width 2) 400 0) 
-		    50 "Play"
+		    50 (mtext-lookup "play-button")
 		    (lambda ()
 		      (destroy game-root)
 		      (set! game-mode "game")
-		      (run-init)))))
-
+		      (run-init))))
+    
+    (set! button-eng (make-text-button 
+		      (vector 70 620 0) 
+		      50 "English"
+		      (lambda ()
+			(set! i18n-lang 0)
+			(destroy game-root)
+			(run-init))))
+    
+    (set! button-fra (make-text-button 
+		      (vector 70 550 0) 
+		      50 "Français"
+		      (lambda ()
+			(set! i18n-lang 1)
+			(destroy game-root)
+			(run-init))))
+    )
+   
    ((eq? game-mode "game")
     (advance-session-id)
     (set! game-root (build-locator))
@@ -758,6 +844,11 @@
 		  (build-plant right-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  ))
      (Math.seedrandom reseeed)
+
+     (set! toxic-example (build-butterfly "example" (vector 0 0 -5)))
+     (animate-example-butterfly! toxic-example)
+     (with-primitive (butterfly-root toxic-example) (hide #t))
+     
      (set! butterflies 
 	   (build-list 
 	    butterfly-start-num 
@@ -814,6 +905,8 @@
   (cond
    ((eq? game-mode "title")
     (text-button-update button-a 0)    
+    (text-button-update button-eng 0)
+    (text-button-update button-fra 0)
     (set! butterflies (update-butterflies butterflies game-mode))
     (animate-butterflies! butterflies (time))
 
@@ -826,6 +919,8 @@
     (textbox-render! title-text)
     (textbox-render! info-text)
     (text-button-render! button-a)
+    (text-button-render! button-eng)
+    (text-button-render! button-fra)
     0)
    ((eq? game-mode "game")
     (set! butterflies (update-butterflies butterflies game-mode))
@@ -833,6 +928,7 @@
     (animate-trees trees)
     (ctx.clearRect 0 0 screen-width screen-height)	  
     (draw-gobble ctx)
+    (draw-toxic)
 
     ;;(draw-debug butterflies)
     

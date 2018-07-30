@@ -13,12 +13,12 @@
 	     (string-append r (local->csv "clearwing" (string-append "hits-" n))))
 	  (_ (+ n 1) max r)))))
   (dbg (_ 0 (+ (local-get-param "clearwing" "Session ID") 1) 
-	  "data-version, clock-time, game-time, born-time, session, butterfly-id, state, type, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background, plant-seed\\n")))
+	  "data-version, clock-time, game-time, born-time, session, butterfly-id, state, type, healthiness, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, screen-time, random-seed, background, plant-seed\\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
-(define admin-version 5)
+(define admin-version 6)
 
 (define (version-check)
   (let ((version (string->number (local-load "clearwing-version"))))
@@ -37,12 +37,25 @@
      <button id='" id "' onclick='butterfly_toggle(this);'>
        <img src='textures/" (car name) "-w-" (cadr name) ".png' width=100 height=100>
      </button>
-     <center><div id='" id "-text'>" 
-     (if (list-contains? selected id) "ON" "OFF") 
-     "</div></center>
+     <center>
+       Visible:
+       <button  id='" id "' onclick='butterfly_toggle(this);'>
+         <div id='" id "-text'>" 
+           (if (list-contains? selected id) "ON" "OFF") 
+         "</div>
+       </button>
+       Healthiness:
+       <input onChange='set_toxicity(this.name,this.value);' type='text' name='" id "' value='" (get-toxicity id) "'></br>
+       Class:
+       <button  id='" id "' onclick='butterfly_toxic(this);'>
+         <div id='" id "-text'>" 
+           (if (list-contains? selected id) "A" "B") 
+         "</div>
+       </button>
+     </center>
    </div>")))
 
-(define (butterfly-toggle a b)
+(define (butterfly-toggle a)
   (let ((name a.id))
     (let ((c (document.getElementById (string-append name "-text")))
 	  (selected (local-load "clearwing-selected")))
@@ -53,6 +66,30 @@
        (else
 	(local-save "clearwing-selected" (cons name selected))
 	(set! c.innerHTML "ON"))))))
+
+(define (set-toxicity name value)
+  (local-save
+   "clearwing-toxicity"
+   (map
+    (lambda (t)
+      (if (eq? name (car t)) 
+	  (list (car t) value) 
+	  t))
+    (local-load "clearwing-toxicity"))))
+ 
+(define (get-toxicity name)
+  (let ((toxicity (local-load-or-create "clearwing-toxicity" '())))
+    (cond 
+     ((null? toxicity) 
+      (local-save 
+       "clearwing-toxicity" 
+       (map (lambda (t) 
+	      (list (string-append (car t) "-" (cadr t)) 1)) 
+	    butterfly-types))
+      1)
+     (else
+      (let ((value (cadr (assoc name toxicity))))
+	(if value value 1))))))
 
 (define (setup-morph-interface)
   (let ((c ($ ".morph-list") )
