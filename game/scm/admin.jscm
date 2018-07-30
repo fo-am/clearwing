@@ -30,7 +30,7 @@
 	  )))
 
 
-(define (butterfly-form name selected)
+(define (butterfly-form name selected bclass)
   (let ((id (string-append (car name) "-" (cadr name))))
     (string-append
      "<div style='display:inline-block; width:100px'>
@@ -47,9 +47,9 @@
        Healthiness:
        <input onChange='set_toxicity(this.name,this.value);' type='text' name='" id "' value='" (get-toxicity id) "'></br>
        Class:
-       <button  id='" id "' onclick='butterfly_toxic(this);'>
-         <div id='" id "-text'>" 
-           (if (list-contains? selected id) "A" "B") 
+       <button  id='" id "' onclick='butterfly_class(this);'>
+         <div id='" id "-class'>" 
+	   (if (list-contains? bclass id) "B" "A") 
          "</div>
        </button>
      </center>
@@ -66,6 +66,18 @@
        (else
 	(local-save "clearwing-selected" (cons name selected))
 	(set! c.innerHTML "ON"))))))
+
+(define (butterfly-class a)
+  (let ((name a.id))
+    (let ((c (document.getElementById (string-append name "-class")))
+	  (bclass (local-load "clearwing-class")))
+      (cond 
+       ((list-contains? bclass name)	 
+	(local-save "clearwing-class" (list-remove bclass name))
+	(set! c.innerHTML "A"))
+       (else
+	(local-save "clearwing-class" (cons name bclass))
+	(set! c.innerHTML "B"))))))
 
 (define (set-toxicity name value)
   (local-save
@@ -93,10 +105,11 @@
 
 (define (setup-morph-interface)
   (let ((c ($ ".morph-list") )
-	(selected (local-load-or-create "clearwing-selected" '())))
+	(selected (local-load-or-create "clearwing-selected" '()))
+	(bclass (local-load-or-create "clearwing-class" '())))
     (for-each
      (lambda (name)
-       (c.append (butterfly-form name selected)))
+       (c.append (butterfly-form name selected bclass)))
      butterfly-types)))
 
 (define (score-id s) (list-ref s 0))

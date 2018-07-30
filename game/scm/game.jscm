@@ -39,6 +39,13 @@
 (define fade-in-time 3)
 (define toxic-hit-time 1000)
 
+;; return list of b not in a
+(define (intersect-lists a b)
+  (filter
+   (lambda (v)
+     (not (list-contains? a v)))
+   b))
+
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
     (set! current-butterfly-id (+ current-butterfly-id 1))
@@ -815,6 +822,11 @@
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
+    (set! class-b (local-load "clearwing-class"))
+    (set! class-a (intersect-lists class-b (map (lambda (t) (string-append (car t) "-" (cadr t))) butterfly-types)))
+    
+    (msg class-a)
+    (msg class-b)
 
     (set! seed (foldl (lambda (i r) (string-append r i)) 
 		      ""
