@@ -7,6 +7,7 @@ varying vec3 L;
 uniform mat4 ModelViewMatrix;
 uniform mat4 NormalMatrix;
 uniform vec3 CameraPos;
+uniform vec3 LightPos;
 attribute vec3 p;
 attribute vec3 t;
 attribute vec3 n;
@@ -17,7 +18,7 @@ void main()
     P = p.xyz;
     T = t;
     C = c;
-    L = vec3(0,1,0); /* vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
+    L = LightPos; /* vec3(0,1,0);  vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
     N = normalize(vec3(NormalMatrix*vec4(n,1)));	
     gl_Position = ModelViewMatrix * vec4(p,1);
 }

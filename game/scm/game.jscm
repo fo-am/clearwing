@@ -41,6 +41,7 @@
 (define static-prob (local-get-param "clearwing" "Static Probability"))
 (define fade-in-time 3)
 (define toxic-hit-time 1000)
+(define toxic-hit-duration 3)
 
 ;; return list of b not in a
 (define (intersect-lists a b)
@@ -179,6 +180,7 @@
       ;; build the body
       (with-state
        (shader-assign-compiled "default")   
+       (shader-uniform! "LightPos" "f" (vector 0 1 0))
        (parent root)
        (texture (load-texture (string-append (car type) "-b.png")))
        (rotate (vector 45 0 0))
@@ -196,12 +198,14 @@
       
       (with-primitive 
        (butterfly-left-wing ret)
+       (shader-uniform! "LightPos" "f" (vector 0 -1 0))
        (scale (vector -1 1 1))
        (translate (vector 0.24 0 0))
        (apply-transform!)
        )
       (with-primitive 
        (butterfly-right-wing ret)
+       (shader-uniform! "LightPos" "f" (vector 0 1 0))
        (translate (vector 0.24 0 0))
        (apply-transform!)
        (rotate (vector 45 0 0))
@@ -216,8 +220,8 @@
 (define (random-point-frustum angle distance)
   (let ((aspect (/ screen-width screen-height)))
     (vector
-     (* (opp (/ angle 2) distance) (* (crndf) 2))
-     (* (opp (/ angle 2 aspect) distance) (* (crndf) 2))
+     (* (opp (/ angle 2) distance) (* (crndf) 4))
+     (* (opp (/ angle 2 aspect) distance) (* (crndf) 4))
      distance)))
 
 (define (generate-start-pos state)
@@ -288,20 +292,15 @@
   (with-primitive 
    (butterfly-root b)
    (identity)
-   (translate (butterfly-pos b))
-   ;;(translate (vector 0 (/ sa 4) 0))
-   (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
-   (rotate (vector 0 90 -90)))
+   (translate (butterfly-pos b)))
   (with-primitive 
    (butterfly-left-wing b)
-   ;;(shader-uniform! "opacity" "f" opacity)
-   (identity)
-   (rotate (vector 45 0 0)))
+   (shader-uniform! "LightPos" "f" (vector 0 0 -1))
+   (identity))
   (with-primitive 
    (butterfly-right-wing b)
-   ;;(shader-uniform! "opacity" "f" opacity)
-   (identity)
-   (rotate (vector 45 0 0))))
+   (shader-uniform! "LightPos" "f" (vector 0 0 1))
+   (identity)))
 
 (define (butterfly-screen-pos s)
   (project-point (butterfly-pos s)))
@@ -472,7 +471,8 @@
    (lambda (b)
      (update-butterfly b))
    (butterfly-birth 
-    (if (and canvas-mouse-clicked (eq? mode "game"))
+    (if (and canvas-mouse-clicked (eq? mode "game")
+	     (> toxic-hit-time toxic-hit-duration))
 	(begin
 	  (set! canvas-mouse-clicked #f)
 	  (butterfly-detect-hits b butterfly-hit))
@@ -512,11 +512,11 @@
   (let ((x (/ screen-width 2))
 	(y (/ screen-height 2)))
     (ctx.beginPath)
-    (ctx.arc x 400 450 0 (* Math.PI 2) true)
+    (ctx.arc x 400 500 0 (* Math.PI 2) true)
     (ctx.closePath)
     (let ((grd (ctx.createRadialGradient
-		x 400 100
-		x 400 450)))
+		x 400 300
+		x 400 500)))
       (grd.addColorStop 0 (string-append "rgba(255, 0, 0, 0.0)"))
       (grd.addColorStop 1 (string-append "rgba(255, 255, 0, 1.0)"))
       (set! ctx.fillStyle grd)
@@ -527,15 +527,21 @@
   (when (eq? toxic-hit-time 0)	
 	(with-primitive (butterfly-root toxic-example) (hide #f)))
   
-  (when (and (< toxic-hit-time 3))
+  (when (and (< toxic-hit-time toxic-hit-duration))
 	(set! toxic-hit-time (+ toxic-hit-time canvas-delta))
 	(draw-toxic-bg ctx)
-	(set! ctx.fillStyle "#fff")	 
-	
+
+	(set! ctx.fillStyle "#000")
+	(set! ctx.globalAlpha 0.75)
+	(ctx.fillRect (- (/ screen-width 2) 300) 440 
+		      600 100)
+	(set! ctx.globalAlpha 1.0)
+
+	(set! ctx.fillStyle "#fff")	 	
 	(centre-text ctx (mtext-lookup "toxic-2") 
-		     (/ screen-width 2) 550))
+		     (/ screen-width 2) 500))
   
-  (when (> toxic-hit-time 3)	
+  (when (> toxic-hit-time toxic-hit-duration)	
 	(with-primitive (butterfly-root toxic-example) (hide #t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -847,7 +853,7 @@
 		      (run-init))))
     
     (set! button-eng (make-text-button 
-		      (vector 70 620 0) 
+		      (vector (+ (/ screen-width 2) 200) 600 0) 
 		      50 "English"
 		      (lambda ()
 			(set! i18n-lang 0)
@@ -855,7 +861,7 @@
 			(run-init))))
     
     (set! button-fra (make-text-button 
-		      (vector 70 550 0) 
+		      (vector (- (/ screen-width 2) 200) 600 0) 
 		      50 "Français"
 		      (lambda ()
 			(set! i18n-lang 1)
@@ -869,6 +875,7 @@
     (shuffle-background)
     (set! health 100)
     (set! hint-time 100)
+    (set! toxic-hit-time 1000)
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
@@ -910,7 +917,10 @@
 
      (set! toxic-example (build-butterfly "example" (vector 0 0 -5) #f))
      (animate-example-butterfly! toxic-example)
-     (with-primitive (butterfly-root toxic-example) (hide #t))
+     (with-primitive 
+      (butterfly-root toxic-example) 
+      (scale (vector 0.5 0.5 0.5))
+      (hide #t))
      
      (set! butterflies 
 	   (build-list 
@@ -969,7 +979,7 @@
    ((eq? game-mode "title")
     (text-button-update button-a 0)    
     (text-button-update button-eng 0)
-    (text-button-update button-fra 0)
+    (text-button-update button-fra 0) 
     (set! butterflies (update-butterflies butterflies game-mode))
     (animate-butterflies! butterflies (time))
 
@@ -982,8 +992,10 @@
     (textbox-render! title-text)
     (textbox-render! info-text)
     (text-button-render! button-a)
+    (set! ctx.font (string-append "20pt " canvas-font))
     (text-button-render! button-eng)
     (text-button-render! button-fra)
+    (set! ctx.font (string-append "30pt " canvas-font))
     0)
    ((eq? game-mode "game")
     (set! butterflies (update-butterflies butterflies game-mode))
@@ -1004,13 +1016,13 @@
     (when (and (< health 20) (< (modulo hint-time 2) 1))
 	  (set! ctx.fillStyle "#000")
 	  (set! ctx.globalAlpha 0.75)
-	  (ctx.fillRect (- (/ screen-width 2) 180) 240 
-			440 100)
+	  (ctx.fillRect (- (/ screen-width 2) 300) 240 
+			600 100)
 	  (set! ctx.globalAlpha 1.0)
 	  (set! ctx.fillStyle "#fff")	  
-	  (ctx.fillText "Warning: Low Health!" 
-			(- (/ screen-width 2) 150) 
-			300))	   
+	  (centre-text ctx "Warning: Low Health!" 
+		       (/ screen-width 2)
+		       300)) 
 
     (when (< health 1)
 	  (destroy game-root)
@@ -1053,15 +1065,18 @@
 			 (load-primitive "models/lsys-plane2.obj")))
 	 (run-init)	 
 
-	  ;; (define p 
-	  ;;   (with-state 
-	  ;;    (hint-cullface)
-	  ;;    (shader-assign-compiled "default")   
-	  ;;    (scale (vector 0.05 0.05 0.05))
-	  ;;    (texture (load-texture "plants/eden2-1.png"))
-	  ;;    (translate (vector 0 -1 -5))
-	  ;;    (rotate (vector 45 45 45))
-	  ;;    (load-primitive "models/lsys-plane2.obj")))
+	 ;; (define p 
+	 ;;    (with-state 
+	 ;;     (hint-cullface)
+	 ;;     (shader-assign-compiled "default")   
+	 ;;     (shader-uniform! "LightPos" "f" (vector 0 1 0))
+	 ;;     (scale (vector 0.05 0.05 0.05))
+	 ;;     (texture (load-texture "hypolaria-w-014.png"))
+	 ;;     (translate (vector 0 -1 -5))
+	 ;;     (rotate (vector 45 45 45))
+	 ;;     ;;(build-cube)
+	 ;;     (load-primitive "models/plane.obj"))
+	 ;;     )
 
 	 (clear-colour (list 0.0 0.0 0.0 0.0))
 	 (every-frame render-game)
