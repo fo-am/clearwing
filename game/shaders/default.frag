@@ -14,6 +14,6 @@ void main() {
     float ambient = 0.5;
     float diffuse = 0.5*dot(l,n)+ambient;
     float alpha = texture2D(texture, vec2(T.s, T.t)).a; /**opacity;*/
-    vec3 col = texture2D(texture, vec2(T.s, T.t)).xyz;
+    vec3 col = texture2D(texture, vec2(T.s, T.t)).xyz*1.2;
     gl_FragColor = vec4(col*C*diffuse*alpha*alpha, alpha);
 }
