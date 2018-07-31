@@ -46,6 +46,13 @@
      (not (list-contains? a v)))
    b))
 
+;; return list in a and b
+(define (and-lists a b)
+  (filter
+   (lambda (v)
+     (list-contains? a v))
+   b))
+
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
     (set! current-butterfly-id (+ current-butterfly-id 1))
@@ -109,9 +116,11 @@
 	(let ((id (choose selected)))
 	  (id.split "-")))))
 
-(define (build-butterfly state pos)
+(define (build-butterfly state pos type)
   (let ((root (build-locator))
-	(type (choose-type)))
+	(type (if (not type) 
+		  (choose-type)
+		  (type.split "-")))) ;; incoming type from classes
     (let ((ret
 	   (with-state
 	    (shader-assign-compiled "default")   
@@ -403,15 +412,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (build-new-butterfly mode)
+(define (build-new-butterfly mode type)
   (with-state
    (parent game-root)
    (if (eq? mode "game")
-       (let ((type (choose (list "approach" "circle"))))
-	 (build-butterfly type (generate-start-pos type)))
+       (let ((state (choose (list "approach" "circle"))))
+	 (build-butterfly state (generate-start-pos state) type))
        (build-butterfly 
 	"title" 
-	(generate-start-pos "title")))))
+	(generate-start-pos "title") type))))
 
 (define (butterfly-birth b mode)
   (filter
@@ -420,10 +429,18 @@
       ((eq? (butterfly-state b) "dead")
        (destroy-butterfly b) #f)
       (else #t)))
-   (if (and (< (length b) max-population)
-	    (< (rndf) new-butterfly-chance))
-       (cons (build-new-butterfly mode) b)
-       b)))
+   (if (or (null? class-b) (eq? mode "title"))
+       ;; no classes, normal mode of operation
+       (if (and (< (length b) max-population)
+		(< (rndf) new-butterfly-chance))
+	   (cons (build-new-butterfly mode #f) b)
+	   b)
+       ;; spawn two, one of each class
+       (if (and (< (length b) (- max-population 1))
+		(< (rndf) new-butterfly-chance))
+	   (append (list (build-new-butterfly mode (choose class-a))
+			 (build-new-butterfly mode (choose class-b))) b)
+	   b))))
   
 (define (update-butterflies b mode)
   (map
@@ -768,6 +785,8 @@
 (define tree-root 0)
 (define current-plant-seed 0)
 (define current-bg-image 0)
+(define class-a '())
+(define class-b '())
 
 (define trees '())
 
@@ -822,8 +841,12 @@
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
-    (set! class-b (local-load "clearwing-class"))
-    (set! class-a (intersect-lists class-b (map (lambda (t) (string-append (car t) "-" (cadr t))) butterfly-types)))
+
+    (let ((selected (local-load "clearwing-selected")))
+      (set! class-b (local-load "clearwing-class"))
+      (set! class-a (intersect-lists class-b (map (lambda (t) (string-append (car t) "-" (cadr t))) butterfly-types)))
+      (set! class-b (and-lists class-b selected))
+      (set! class-a (and-lists class-a selected)))
     
     (msg class-a)
     (msg class-b)
@@ -857,14 +880,14 @@
 		  ))
      (Math.seedrandom reseeed)
 
-     (set! toxic-example (build-butterfly "example" (vector 0 0 -5)))
+     (set! toxic-example (build-butterfly "example" (vector 0 0 -5) #f))
      (animate-example-butterfly! toxic-example)
      (with-primitive (butterfly-root toxic-example) (hide #t))
      
      (set! butterflies 
 	   (build-list 
 	    butterfly-start-num 
-	    (lambda (_) (build-new-butterfly game-mode)))))
+	    (lambda (_) (build-new-butterfly game-mode #f)))))
     )
    
    ((eq? game-mode "end")
