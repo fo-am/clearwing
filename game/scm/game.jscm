@@ -36,6 +36,9 @@
 (define butterfly-start-num (local-get-param "clearwing" "Starting Population"))
 (define butterfly-wing-size (local-get-param "clearwing" "Butterfly wing size CM"))
 (define butterfly-scale (* butterfly-wing-size 2)) ;; plane.obj is 0.5 units wide
+(define approach-prob (local-get-param "clearwing" "Approach Probability"))
+(define circle-prob (local-get-param "clearwing" "Circle Probability"))
+(define static-prob (local-get-param "clearwing" "Static Probability"))
 (define fade-in-time 3)
 (define toxic-hit-time 1000)
 
@@ -52,6 +55,15 @@
    (lambda (v)
      (list-contains? a v))
    b))
+
+(define (probability-choice probs)
+  (define choice (rndf))
+  (define (helper val prob-lis)
+    (let ((nval (- val (cadr (car prob-lis)))))
+      (if (or (< nval 0) (null? (cdr prob-lis)))
+	  (car (car prob-lis))
+	  (helper nval (cdr prob-lis)))))
+  (helper choice probs))
 
 (define (butterfly-generate-id)
   (let ((r current-butterfly-id))
@@ -212,7 +224,7 @@
   (cond 
    ((eq? state "title")
     (vector (+ -30 (* (rndf) 5)) (* (crndf) 15) -20))
-   ((eq? state "circle")
+   ((or (eq? state "circle") (eq? state "static"))
     (random-point-frustum (get-camera-angle) 
 			  (+ min-appearance-depth
 			     (* (rndf) (- max-appearance-depth 
@@ -224,7 +236,8 @@
   (let ((t (butterfly-t b)))
     (butterfly-modify-pos
      (if (or (and 
-	      (eq? (butterfly-state b) "circle")
+	      (or (eq? (butterfly-state b) "circle")
+		  (eq? (butterfly-state b) "static"))
 	      (> (butterfly-t b) butterfly-circle-timeout))
 	     (if (eq? (butterfly-state b) "title")
 		 (> (vx (butterfly-pos b)) 24) 
@@ -241,33 +254,35 @@
 		       butterfly-speed))
 	      b)
 	  (+ t canvas-delta)))
-     (vadd 
-      (butterfly-pos b)
-      (butterfly-dir b)
-      ))))
+     (if (eq? (butterfly-state b) "static")
+	 (butterfly-pos b)
+	 (vadd 
+	  (butterfly-pos b)
+	  (butterfly-dir b)
+	  )))))
 
 (define (animate-butterfly! b t)
-    (let (;;(opacity (min (/ (butterfly-t b) fade-in-time) 1))
-	  (a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
-      (let ((sa (* -3.5 (- (abs (sin a)) 0.45))))
-	(with-primitive 
-	 (butterfly-root b)
-	 (identity)
-	 (translate (butterfly-pos b))
-	 (translate (vector 0 (/ sa 4) 0))
-	 (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
-	 (rotate (vector 0 90 -90))
-	 )
-	(with-primitive 
-	 (butterfly-left-wing b)
-	 ;;(shader-uniform! "opacity" "f" opacity)
-	 (identity)
-	 (rotate (vector 45 (* 45 sa) 0)))
-	(with-primitive 
-	 (butterfly-right-wing b)
-	 ;;(shader-uniform! "opacity" "f" opacity)
-	 (identity)
-	 (rotate (vector 45 (* -45 sa) 0))))))
+  (let (;;(opacity (min (/ (butterfly-t b) fade-in-time) 1))
+	(a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
+    (let ((sa (* -3.5 (- (abs (sin a)) 0.45))))
+      (with-primitive 
+       (butterfly-root b)
+       (identity)
+       (translate (butterfly-pos b))
+       (translate (vector 0 (/ sa 4) 0))
+       (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
+       (rotate (vector 0 90 -90))
+       )
+      (with-primitive 
+       (butterfly-left-wing b)
+       ;;(shader-uniform! "opacity" "f" opacity)
+       (identity)
+       (rotate (vector 45 (* 45 sa) 0)))
+      (with-primitive 
+       (butterfly-right-wing b)
+       ;;(shader-uniform! "opacity" "f" opacity)
+       (identity)
+       (rotate (vector 45 (* -45 sa) 0))))))
 
 (define (animate-example-butterfly! b)
   (with-primitive 
@@ -423,7 +438,10 @@
   (with-state
    (parent game-root)
    (if (eq? mode "game")
-       (let ((state (choose (list "approach" "circle"))))
+       (let ((state (probability-choice 
+		     (list (list "approach" approach-prob)
+			   (list "circle" circle-prob)
+			   (list "static" static-prob)))))
 	 (build-butterfly state (generate-start-pos state) type))
        (build-butterfly 
 	"title" 
@@ -512,7 +530,8 @@
   (when (and (< toxic-hit-time 3))
 	(set! toxic-hit-time (+ toxic-hit-time canvas-delta))
 	(draw-toxic-bg ctx)
-	(set! ctx.fillStyle "#f00")	 
+	(set! ctx.fillStyle "#fff")	 
+	
 	(centre-text ctx (mtext-lookup "toxic-2") 
 		     (/ screen-width 2) 550))
   
@@ -523,8 +542,13 @@
 
 (define (set-background img)
   (set! current-background img)
-  ;;(js "$('#webgl-canvas').css('background-image', 'url('+img+')');")
-  )
+  (js "$('#webgl-canvas').css('background-repeat', 'no-repeat');")
+  (js "$('#webgl-canvas').css('background-position', 'center');")
+  (js "$('#webgl-canvas').css('background-size', 'cover');")
+  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');"))
+
+(define (black-background img)
+  (js "$('#webgl-canvas').css('background', '#000');"))
 
 (define (shuffle-background)
   (set-background (choose (list "images/bg-01.jpg"
@@ -800,7 +824,7 @@
 (define (run-init)
   (cond 
    ((eq? game-mode "title")
-    (set-background "images/bg.jpg")
+    (black-background)
     (canvas-setup)
     (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
@@ -855,9 +879,6 @@
       (set! class-b (and-lists class-b selected))
       (set! class-a (and-lists class-a selected)))
     
-    (msg class-a)
-    (msg class-b)
-
     (set! seed (foldl (lambda (i r) (string-append r i)) 
 		      ""
 		      (build-list 20 (lambda (_) (random 10)))))
@@ -898,7 +919,7 @@
     )
    
    ((eq? game-mode "end")
-    (set-background "images/bg.jpg")
+    (black-background)
     (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
     (let ((time-taken (/ (- (js "new Date()") game-start-time) 1000.0)))
@@ -953,11 +974,11 @@
     (animate-butterflies! butterflies (time))
 
     (ctx.clearRect 0 0 screen-width screen-height)	  
+    ;;(set! ctx.fillStyle "#000")
+    ;;(set! ctx.globalAlpha 0.75)
+    ;;(ctx.fillRect 0 160 screen-width 340)
+    ;;(set! ctx.globalAlpha 1.0)
     (set! ctx.fillStyle "#fff")
-    (set! ctx.globalAlpha 0.75)
-    (ctx.fillRect 0 160 screen-width 340)
-    (set! ctx.globalAlpha 1.0)
-    (set! ctx.fillStyle "#000")
     (textbox-render! title-text)
     (textbox-render! info-text)
     (text-button-render! button-a)
@@ -981,12 +1002,12 @@
     (set! hint-time (+ hint-time 0.1))
 
     (when (and (< health 20) (< (modulo hint-time 2) 1))
-	  (set! ctx.fillStyle "#fff")
+	  (set! ctx.fillStyle "#000")
 	  (set! ctx.globalAlpha 0.75)
 	  (ctx.fillRect (- (/ screen-width 2) 180) 240 
 			440 100)
 	  (set! ctx.globalAlpha 1.0)
-	  (set! ctx.fillStyle "#f00")	  
+	  (set! ctx.fillStyle "#fff")	  
 	  (ctx.fillText "Warning: Low Health!" 
 			(- (/ screen-width 2) 150) 
 			300))	   
@@ -1004,11 +1025,11 @@
     (animate-butterflies! butterflies (time))
 
     (ctx.clearRect 0 0 screen-width screen-height)	  
+    ;;(set! ctx.fillStyle "#000")
+    ;;(set! ctx.globalAlpha 0.75)
+    ;;(ctx.fillRect 0 160 screen-width 340)
+    ;;(set! ctx.globalAlpha 1.0)
     (set! ctx.fillStyle "#fff")
-    (set! ctx.globalAlpha 0.75)
-    (ctx.fillRect 0 160 screen-width 340)
-    (set! ctx.globalAlpha 1.0)
-    (set! ctx.fillStyle "#000")
     (textbox-render! title-text)
     (textbox-render! info-text)
     (text-button-render! button-a)
