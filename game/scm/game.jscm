@@ -247,7 +247,8 @@
 		 ;; slightly behind the back plane
 		 (> (vz (butterfly-pos b)) 2)))
 	 (begin
-	   (record-butterfly b (list 0 0) "missed") 
+	   (when (not (eq? (butterfly-state b) "title"))
+		 (record-butterfly b (list 0 0) "missed")) 
 	   (butterfly-modify-state b "dead"))
 	 (butterfly-modify-t 
 	  (if (eq? (butterfly-state b) "circle")
