@@ -95,7 +95,6 @@
     (let ((h (* (/ t max-t) num-hearts)))
       (draw-heart-array (floor h) (- x (/ (* 10 50) 2)) (< (modulo h 1) 0.5)))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (make-butterfly id type state pos dir root left-wing right-wing jitter t born-time birth-pos)
@@ -234,7 +233,7 @@
 			     (* (rndf) (- max-appearance-depth 
 					  min-appearance-depth)))))
    (else
-    (random-point-frustum (get-camera-angle) max-appearance-depth)))
+    (random-point-frustum (get-camera-angle) max-appearance-depth))))
 
 (define (update-butterfly b)
   (let ((t (butterfly-t b)))
