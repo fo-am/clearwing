@@ -234,7 +234,7 @@
 			     (* (rndf) (- max-appearance-depth 
 					  min-appearance-depth)))))
    (else
-    (dbg (random-point-frustum (get-camera-angle) max-appearance-depth)))))
+    (random-point-frustum (get-camera-angle) max-appearance-depth)))
 
 (define (update-butterfly b)
   (let ((t (butterfly-t b)))
@@ -711,7 +711,6 @@
   (let ((depth (list-ref desc 0))
 	(rot (list-ref desc 1))
 	(rules (list-ref desc 2)))
-    (msg desc)
     (crop
      (shuffle
       (with-state

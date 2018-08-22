@@ -18,7 +18,7 @@
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
-(define admin-version 7)
+(define admin-version 8)
 
 (define (version-check)
   (let ((version (string->number (local-load "clearwing-version"))))
