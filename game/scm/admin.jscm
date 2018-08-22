@@ -13,7 +13,7 @@
 	     (string-append r (local->csv "clearwing" (string-append "hits-" n))))
 	  (_ (+ n 1) max r)))))
   (dbg (_ 0 (+ (local-get-param "clearwing" "Session ID") 1) 
-	  "data-version, clock-time, game-time, born-time, session, butterfly-id, state, type, healthiness, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, birth-pos-x, birth-pos-y, birth-pos-z, birth-screen-x, birth-screen-y, screen-time, random-seed, background, plant-seed\\n")))
+	  "data-version, hit-or-missed, clock-time, game-time, born-time, session, butterfly-id, state, type, healthiness, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, birth-pos-x, birth-pos-y, birth-pos-z, birth-screen-x, birth-screen-y, screen-time, random-seed, background, plant-seed\\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))

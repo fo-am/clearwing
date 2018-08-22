@@ -247,7 +247,9 @@
 		 (> (vx (butterfly-pos b)) 24) 
 		 ;; slightly behind the back plane
 		 (> (vz (butterfly-pos b)) 2)))
-	 (butterfly-modify-state b "dead")
+	 (begin
+	   (record-butterfly b (vector 0 0) "missed") 
+	   (butterfly-modify-state b "dead"))
 	 (butterfly-modify-t 
 	  (if (eq? (butterfly-state b) "circle")
 	      ;; rotate direction
@@ -335,30 +337,15 @@
 
 (define save-version 1)
 
-(define (butterfly-hit butterflies butterfly pos)
+(define (record-butterfly butterfly pos hit-or-missed) 
   (let ((type-string (string-append (car (butterfly-type butterfly)) "-" (cadr (butterfly-type butterfly)))))
     (let ((toxicity (get-toxicity type-string)))
-      (set! butterflies-caught (+ butterflies-caught 1))
-      (cond 
-       ((< toxicity 0) 
-	(set! toxic-hit-time 0)
-	(with-primitive 
-	 (butterfly-left-wing toxic-example)
-	 (texture (load-texture (string-append (car (butterfly-type butterfly)) "-w-" (cadr (butterfly-type butterfly)) ".png"))))
-	(with-primitive 
-	 (butterfly-right-wing toxic-example)
-	 (texture (load-texture (string-append (car (butterfly-type butterfly)) "-w-" (cadr (butterfly-type butterfly)) ".png"))))
-	(make-gobble (vx pos) (vy pos) 255 0 0 0.05))
-       (else 
-	(make-gobble (vx pos) (vy pos) 0 255 0 0.05)))
-      
-      (set! health (+ health (* health-inc toxicity)))
-
       (local-add-item 
        "clearwing" 
        (string-append "hits-" (local-get-param "clearwing" "Session ID"))
        (list
 	save-version
+	hit-or-missed
 	(time)
 	(/ (- (js "new Date()") game-start-time) 1000)
 	(butterfly-born-time butterfly)
@@ -386,8 +373,27 @@
 	(butterfly-jitter butterfly)
 	current-background
 	current-plant-seed
-	))
+	)))))
 
+
+(define (butterfly-hit butterflies butterfly pos)
+  (let ((type-string (string-append (car (butterfly-type butterfly)) "-" (cadr (butterfly-type butterfly)))))
+    (let ((toxicity (get-toxicity type-string)))
+      (set! butterflies-caught (+ butterflies-caught 1))
+      (cond 
+       ((< toxicity 0) 
+	(set! toxic-hit-time 0)
+	(with-primitive 
+	 (butterfly-left-wing toxic-example)
+	 (texture (load-texture (string-append (car (butterfly-type butterfly)) "-w-" (cadr (butterfly-type butterfly)) ".png"))))
+	(with-primitive 
+	 (butterfly-right-wing toxic-example)
+	 (texture (load-texture (string-append (car (butterfly-type butterfly)) "-w-" (cadr (butterfly-type butterfly)) ".png"))))
+	(make-gobble (vx pos) (vy pos) 255 0 0 0.05))
+       (else 
+	(make-gobble (vx pos) (vy pos) 0 255 0 0.05)))
+      (set! health (+ health (* health-inc toxicity)))
+      (record-butterfly butterfly pos "hit") 
       (map
        (lambda (b)
 	 (cond 
