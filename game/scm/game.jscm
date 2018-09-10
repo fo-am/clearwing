@@ -164,6 +164,8 @@
 	      (cond 
 	       ((eq? state "title")
 		(vector butterfly-speed 0 0))
+	       ((eq? state "static")
+		(vector (if (< (rndf) 0.5) 1 -1) 0 0))
 	       (else
 		;; aim at the camera at 0,0,0
 		(vmul (vnormalise (vsub (vector 0 0 0) pos)) 
@@ -171,7 +173,8 @@
 	     root
 	     (load-primitive "models/plane.obj")
 	     (load-primitive "models/plane.obj")
-	     (rndf) 0 
+	     (if (eq? state "static") 0 (rndf)) 
+	     0 
 	     (time)
 	     pos))))
       
@@ -506,7 +509,9 @@
 (define (animate-butterflies! b t)
   (for-each 
    (lambda (b)
-     (animate-butterfly! b t))
+     (if (eq? (butterfly-state b) "static")
+	 (animate-butterfly! b 1.15)
+	 (animate-butterfly! b t)))
    b))
 
 (define (draw-debug butterflies)
