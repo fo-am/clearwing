@@ -371,8 +371,26 @@
 	(vy (project-point (butterfly-birth-pos butterfly)))
 	(butterfly-t butterfly)
 	(butterfly-jitter butterfly)
-	current-background
-	current-plant-seed
+	current-background-id
+	(local-get-param "clearwing" "Background")
+	(local-get-param "clearwing" "Approach Probability")
+	(local-get-param "clearwing" "Circle Probability")
+	(local-get-param "clearwing" "Static Probability")
+	(local-get-param "clearwing" "Health Decrease")
+	(local-get-param "clearwing" "Health Increase")
+	(local-get-param "clearwing" "Max Population")
+	(local-get-param "clearwing" "Starting Population")
+	(local-get-param "clearwing" "New Butterfly Chance")
+	(local-get-param "clearwing" "Butterfly Speed")
+	(local-get-param "clearwing" "Flap Speed")
+	(local-get-param "clearwing" "Max Appearance Depth")
+	(local-get-param "clearwing" "Min Appearance Depth")
+	(local-get-param "clearwing" "Path Variation Degrees")
+	(local-get-param "clearwing" "Circle Speed")
+	(local-get-param "clearwing" "Circle Timeout Seconds")
+	(local-get-param "clearwing" "Hit Leeway Pixels")
+	(local-get-param "clearwing" "Butterfly wing size CM")
+
 	)))))
 
 
@@ -553,24 +571,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (set-background img)
-  (set! current-background img)
   (js "$('#webgl-canvas').css('background-repeat', 'no-repeat');")
   (js "$('#webgl-canvas').css('background-position', 'center');")
   (js "$('#webgl-canvas').css('background-size', 'cover');")
-  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');"))
+  (js "$('#webgl-canvas').css('background-image', 'url('+img+')');")
+  )
 
 (define (black-background img)
   (js "$('#webgl-canvas').css('background', '#000');"))
 
-(define (shuffle-background)
-  (set-background (choose (list "images/bg-01.jpg"
-				"images/bg-02.jpg"
-				"images/bg-03.jpg"
-				"images/bg-04.jpg"
-				"images/bg-05.jpg"
-				"images/bg-06.jpg"
-				"images/bg-07.jpg"
-				))))
+(define backgrounds 
+  ;; pair together images and seeds for generating plants
+  (list (list "images/bg-01.jpg" "94255153685224915579")
+	(list "images/bg-02.jpg" "71581297379082496273")
+	(list "images/bg-03.jpg" "53171334320362635485")
+	(list "images/bg-04.jpg" "95725403803993402243")
+	(list "images/bg-05.jpg" "86359556932760390246")
+	(list "images/bg-06.jpg" "65190716667854603194")
+	(list "images/bg-07.jpg" "36805467568915657338")))
   
 (define (animate-trees tree)
   (for-each 
@@ -579,9 +597,10 @@
       (lambda (p)
 	(with-primitive 
 	 p
-	 (rotate (vector (* 0.1 (cos (* 1 (* 0.5 (+ 1 (modulo p 5)) (time))
-					)))
-			 0 0))))
+	 (rotate (vector (* 0.02 (cos (* 1 (* 0.5 (+ 1 (modulo p 5)) (time)))))
+			 (* 0.02 (cos (* 1.2 (* 0.5 (+ 1 (modulo p 5)) (time)))))
+			 (* 0.02 (sin (* 1 (* 0.5 (+ 1 (modulo p 5)) (time)))))
+			 ))))
       tree))
    trees))
 
@@ -621,71 +640,22 @@
  (lambda (t)
    (load-texture t))
  (list
-    "plants/1-1.png"
-
-    "plants/2-1.png"
-    "plants/2-2.png"
-    "plants/2-3.png"
-
-    "plants/3-1.png"
-    "plants/3-2.png"
-    "plants/3-3.png"
-    "plants/3-4.png"
-    "plants/3-5.png"
-
-    "plants/4-1.png"
-    "plants/4-2.png"
-    "plants/4-3.png"
-    "plants/4-4.png"
-
-    "plants/5-1.png"
-    "plants/5-2.png"
-    "plants/5-3.png"
-    "plants/5-4.png"
-    "plants/5-5.png"
-    "plants/5-6.png"
-    "plants/5-7.png"
-    "plants/5-8.png"
-    "plants/5-9.png"
-
-    "plants/eden1-1.png"
-    
-    "plants/eden2-1.png"
-    "plants/eden2-2.png"
-    "plants/eden2-3.png"
-    "plants/eden2-4.png"
-    "plants/eden2-5.png"
-
-    "plants/eden3-1.png"
-    "plants/eden3-2.png"
-    "plants/eden3-3.png"
-
-    "plants/eden4-1.png"
-    "plants/eden4-2.png"
-    "plants/eden4-3.png"
-
-    "plants/eden5-1.png"
-    "plants/eden5-2.png"
-    "plants/eden5-3.png"
-
-    "plants/eden6-1.png"
-    "plants/eden6-2.png"
-
-    "plants/eden7-1.png"
-    "plants/eden7-2.png"
-    "plants/eden7-3.png"
-
-    "plants/stem 1.png"
-    "plants/stem 2.png"
-    "plants/stem 3.png"
-    "plants/stem 4.png"
-    "plants/stem 5.png"
-    "plants/stem 6.png"
-    "plants/stem 7.png"
-    "plants/stem 8.png"
-    "plants/stem 9.png"
-    "plants/stem 10.png"
-    "plants/stem 11.png"
+    "newplants/a1.png"
+    "newplants/a2.png"
+    "newplants/b1.png"
+    "newplants/b2.png"
+    "newplants/c1.png"
+    "newplants/c2.png"
+    "newplants/d1.png"
+    "newplants/d2.png"
+    "newplants/e1.png"
+    "newplants/e2.png"
+    "newplants/f1.png"
+    "newplants/f2.png"
+    "newplants/g1.png"
+    "newplants/g2.png"
+    "newplants/h1.png"
+    "newplants/h2.png"
     ))
    
 (load-mesh-cache "models/plane.obj")
@@ -711,6 +681,7 @@
   (let ((depth (list-ref desc 0))
 	(rot (list-ref desc 1))
 	(rules (list-ref desc 2)))
+    (msg rules)
     (crop
      (shuffle
       (with-state
@@ -722,11 +693,11 @@
        (ls-build (ls-generate depth "A" rules)
 		 (vx rot) (vy rot) (vz rot) 0.80 depth leaf-obj
 		 textures (vector 1 1 1))))
-     30)))
+     50)))
 
-(define left-plant-pos (vector -60 -100 -180))
+(define left-plant-pos (vector -100 -120 -180))
 (define centre-plant-pos (vector 0 -150 -180))
-(define right-plant-pos (vector 60 -100 -180))
+(define right-plant-pos (vector 100 -120 -180))
 
 (define plant-rules 
   (list
@@ -739,8 +710,8 @@
     7 
     (vector 17 25 25)
     (list 
-     (list "B" "aa[+b]d[-c]")
-     (list "A" "aa-a+[--B][+++B]+/[A]")))
+     (list "B" "ab[+b]d[-c]")
+     (list "A" "ac-a+[--B][+++B]+/[A]")))
    (list ;; twisty tree
     6 
     (vector 45 5 35)
@@ -751,73 +722,44 @@
     5 
     (vector 17 15 15)
     (list 
-     (list "B" "[a+aa++b[f&A][f^A]]")
-     (list "A" "B/A/A")
+     (list "B" "[fa+cf++b[f&A]----[f^A]]")
+     (list "A" "AcfB+A")
      ))))
 
 (define plant-texture-sets 
   (list
    (list 
-    "plants/stem 11.png"
-    "plants/eden7-1.png"
-    "plants/eden7-2.png"
-    "plants/eden7-3.png"
+    "newplants/a1.png"
+    "newplants/a2.png"
     )
    (list 
-    "plants/stem 6.png"
-    "plants/eden6-1.png"
-    "plants/eden6-2.png"
-    "plants/eden6-2.png"
+    "newplants/b1.png"
+    "newplants/b2.png"
     )
    (list 
-    "plants/stem 5.png"
-    "plants/eden5-1.png"
-    "plants/eden5-2.png"
-    "plants/eden5-3.png"
+    "newplants/c1.png"
+    "newplants/c2.png"
     )
    (list 
-    "plants/stem 4.png"
-    "plants/eden4-1.png"
-    "plants/eden4-2.png"
-    "plants/eden4-3.png"
+    "newplants/d1.png"
+    "newplants/d2.png"
     )
    (list 
-    "plants/stem 4.png"
-    "plants/eden3-1.png"
-    "plants/eden3-2.png"
-    "plants/eden3-3.png"
+    "newplants/e1.png"
+    "newplants/e2.png"
     )
    (list 
-    "plants/stem 4.png"
-    "plants/eden1-1.png"
-    "plants/eden1-1.png"
-    "plants/eden1-1.png"
+    "newplants/f1.png"
+    "newplants/f2.png"
     )
    (list 
-    "plants/stem 3.png"
-    "plants/5-1.png"
-    "plants/5-2.png"
-    "plants/5-3.png"
+    "newplants/g1.png"
+    "newplants/g2.png"
     )
    (list 
-    "plants/stem 1.png"
-    "plants/4-1.png"
-    "plants/4-2.png"
-    "plants/4-3.png"
-    )
-   (list 
-    "plants/stem 2.png"
-    "plants/3-1.png"
-    "plants/3-2.png"
-    "plants/3-3.png"
-    )
-   (list 
-    "plants/stem 2.png"
-    "plants/eden7-1.png"
-    "plants/eden7-2.png"
-    "plants/eden7-3.png"
-    )
-   ))
+    "newplants/h1.png"
+    "newplants/h2.png"
+    )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -825,8 +767,8 @@
 (define butterflies '())
 (define leaf-obj 0)
 (define tree-root 0)
-(define current-plant-seed 0)
-(define current-bg-image 0)
+(define current-background '())
+(define current-background-id 0)
 (define class-a '())
 (define class-b '())
 
@@ -877,7 +819,16 @@
    ((eq? game-mode "game")
     (advance-session-id)
     (set! game-root (build-locator))
-    (shuffle-background)
+
+    ;; use background lock if enabled
+    (if (eq? (local-get-param "clearwing" "Background") -1)
+	(begin
+	  (set! current-background-id (random (length backgrounds)))
+	  (set! current-background (list-ref backgrounds current-background-id)))
+	(set! current-background (list-ref backgrounds (local-get-param "clearwing" "Background"))))
+    
+    (set-background (car current-background))
+
     (set! health 100)
     (set! hint-time 100)
     (set! toxic-hit-time 1000)
@@ -896,26 +847,14 @@
 		      (build-list 20 (lambda (_) (random 10)))))
     
     (set! reseeed (rndf))
-    (define seeds (list "one" 
-			"71016562679325265622" 
-			"10994801477592654110"
-			"55999618436612302696"
-			"56368532757824931962"
-			"19020405703337933236"
-			"08685588002554564547"
-			"35622594592923537813"
-			"10696066169979244499"
-			"23282390091090871726"
-			"53059426701815948700"
-			"64763880626676799924"))
-    (set! current-plant-seed (choose seeds))
-    (Math.seedrandom current-plant-seed)
+    (Math.seedrandom (cadr current-background))
+    ;;(Math.seedrandom seed)
     ;;(msg seed)
     (with-state
      (parent game-root)
      (set! trees (list 		  
 		  (build-plant left-plant-pos (choose plant-rules) (choose plant-texture-sets))
-		  (build-plant centre-plant-pos (choose plant-rules) (choose plant-texture-sets))
+		  ;;(build-plant centre-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  (build-plant right-plant-pos (choose plant-rules) (choose plant-texture-sets))
 		  ))
      (Math.seedrandom reseeed)

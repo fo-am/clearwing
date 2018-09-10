@@ -22,8 +22,7 @@
   (foldl 
    (lambda (char structure)
      (cond 
-      ((or (eq? "a" char) 
-	   (eq? "b" char) 
+      ((or (eq? "b" char) 
 	   (eq? "c" char) 	
 	   (eq? "d" char) 
 	   (eq? "e" char))
@@ -31,11 +30,10 @@
 		   (texture
 		    (load-texture
 		     (cond
-		      ((eq? "a" char) (list-ref textures 0))
 		      ((eq? "b" char) (list-ref textures 1))
-		      ((eq? "c" char) (list-ref textures 2))
-		      ((eq? "d" char) (list-ref textures 3))
-		      ((eq? "e" char) (list-ref textures 4))
+		      ((eq? "c" char) (list-ref textures 0))
+		      ((eq? "d" char) (list-ref textures 1))
+		      ((eq? "e" char) (list-ref textures 0))
 		      (else (list-ref textures 6)))))	    
 		   (hint-nozwrite)
 		   ;;(hint-cullface)
@@ -49,8 +47,8 @@
 		   ;;(translate (vector 0 0 pos))
 		   (set! pos (+ pos 0.0015))
 		   (build-instance obj))))
-	 (when (eq? "a" char) (translate (vector 0.6 0 0)))
 	 structure))
+      ((eq? "a" char) (translate (vector 0.6 0 0)) structure)
       ((eq? "f" char) (translate (vector 0.6 0 0)) structure)
       ((eq? "/" char) (rotate (vector anglex 0 0)) structure)
       ((eq? "\\" char) (rotate (vector (- (+ anglex (* (crndf) jitter))) 0 0)) structure)
