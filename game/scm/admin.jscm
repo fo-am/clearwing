@@ -203,6 +203,7 @@
   (list "Approach Probability" 0.33)
   (list "Circle Probability" 0.33)
   (list "Static Probability" 0.33)
+  (list "Toxicity" 1)
   (list "Health Decrease" 5)
   (list "Health Increase" 10)
   (list "Max Population" 10)
