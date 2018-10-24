@@ -820,7 +820,8 @@
     (set! game-root (build-locator))
 
     ;; use background lock if enabled
-    (set! current-background (choose (local-load "clearwing-bg-selected")))
+    (let ((bgs (local-load "clearwing-bg-selected")))
+      (set! current-background (choose (if (null? bgs) backgrounds bgs))))
     (set! current-plantseed (choose plant-seeds))
     (set-background current-background)
 
