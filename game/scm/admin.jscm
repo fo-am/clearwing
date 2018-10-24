@@ -14,7 +14,8 @@
 	  (_ (+ n 1) max r)))))
   (dbg (_ 0 (+ (local-get-param "clearwing" "Session ID") 1) 
 	  (string-append "data-version, hit-or-missed, clock-time, game-time, born-time, session, butterfly-id, state, type, healthiness, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, birth-pos-x, birth-pos-y, birth-pos-z, birth-screen-x, birth-screen-y, screen-time, random-seed, background, "
-			 "Background Setting, "
+			 "Plant Random Seed"
+			 "Moving plants visible, "
 			 "Approach Probability, "
 			 "Circle Probability, "
 			 "Static Probability, "
@@ -73,6 +74,34 @@
      </center>
    </div>")))
 
+(define (background-form name selected)
+  (string-append
+   "<div style='display:inline-block; width:180px'>
+    <button id='" name "' onclick='background_toggle(this);'>
+       <img src='" name "' width=160 height=100>
+     </button>
+     <center>"
+       name 
+       "<button  id='" name "' onclick='background_toggle(this);'>
+         <div id='" name "-text'>" 
+           (if (list-contains? selected name) "ON" "OFF") 
+         "</div>
+       </button>
+     </center>
+   </div>"))
+
+(define (background-toggle a)
+  (let ((name a.id))
+    (let ((c (document.getElementById (string-append name "-text")))
+	  (selected (local-load "clearwing-bg-selected")))
+      (cond 
+       ((list-contains? selected name)	 
+	(local-save "clearwing-bg-selected" (list-remove selected name))
+	(set! c.innerHTML "OFF"))
+       (else
+	(local-save "clearwing-bg-selected" (cons name selected))
+	(set! c.innerHTML "ON"))))))
+
 (define (butterfly-toggle a)
   (let ((name a.id))
     (let ((c (document.getElementById (string-append name "-text")))
@@ -129,6 +158,14 @@
      (lambda (name)
        (c.append (butterfly-form name selected bclass)))
      butterfly-types)))
+
+(define (setup-background-interface)
+  (let ((c ($ ".background-list") )
+	(selected (local-load-or-create "clearwing-bg-selected" '())))
+    (for-each
+     (lambda (name)
+       (c.append (background-form name selected)))
+     backgrounds)))
 
 (define (score-id s) (list-ref s 0))
 (define (score-time-taken s) (list-ref s 1))
@@ -193,13 +230,59 @@
 
    ))
 
+;; (define backgrounds 
+;;   ;; pair together images and seeds for generating plants
+;;   (list (list "images/bg-01.jpg" "94255153685224915579")
+;; 	(list "images/bg-02.jpg" "71581297379082496273")
+;; 	(list "images/bg-03.jpg" "53171334320362635485")
+;; 	(list "images/bg-04.jpg" "95725403803993402243")
+;; 	(list "images/bg-05.jpg" "86359556932760390246")
+;; 	(list "images/bg-06.jpg" "65190716667854603194")
+;; 	(list "images/bg-07.jpg" "36805467568915657338")
+
+;; 	(list "images/bg-08.jpg" "36805467568915657338")
+;; 	(list "images/bg-09.jpg" "95725403803993402243")
+;; 	(list "images/bg-10.jpg" "65190716667854603194")
+;; 	(list "images/bg-11.jpg" "71581297379082496273")
+	
+
+;; 	))
+
+(define backgrounds 
+  (list "images/bg-01.jpg"
+	"images/bg-02.jpg"
+	"images/bg-03.jpg"
+	"images/bg-04.jpg"
+	"images/bg-05.jpg"
+	"images/bg-06.jpg"
+	"images/bg-07.jpg"
+
+	"images/bg-08.jpg"
+	"images/bg-09.jpg"
+	"images/bg-10.jpg"
+	"images/bg-11.jpg"
+
+	"images/bg-12.jpg"
+	"images/bg-13.jpg"
+	"images/bg-14.jpg"
+	))
+
+(define plant-seeds
+  (list "94255153685224915579"
+	"71581297379082496273"
+	"53171334320362635485"
+	"95725403803993402243"
+	"86359556932760390246"
+	"65190716667854603194"
+	"36805467568915657338"))
+
 (setup-morph-interface)
+(setup-background-interface)
 
 (local-setup-params 
  "clearwing" 
  (list
   (list "Session ID" 0)
-  (list "Background" -1)
   (list "Approach Probability" 0.33)
   (list "Circle Probability" 0.33)
   (list "Static Probability" 0.33)
@@ -218,5 +301,8 @@
   (list "Circle Timeout Seconds" 10)
   (list "Hit Leeway Pixels" 10)
   (list "Butterfly wing size CM" 2.5)
+  (list "Butterfly opacity" 0.75)
+  (list "Butterfly ambient light" 0.5)
+  (list "Moving plants" 1)
   ))
 
