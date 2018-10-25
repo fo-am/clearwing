@@ -37,7 +37,7 @@
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
 
-(define admin-version 8)
+(define admin-version 9)
 
 (define (version-check)
   (let ((version (string->number (local-load "clearwing-version"))))
@@ -64,6 +64,8 @@
          "</div>
        </button>
        Healthiness:
+       <input onChange='set_healthiness(this.name,this.value);' type='text' name='" id "' value='" (get-healthiness id) "'></br>
+       Toxicity:
        <input onChange='set_toxicity(this.name,this.value);' type='text' name='" id "' value='" (get-toxicity id) "'></br>
        Class:
        <button  id='" id "' onclick='butterfly_class(this);'>
@@ -143,11 +145,35 @@
       (local-save 
        "clearwing-toxicity" 
        (map (lambda (t) 
-	      (list (string-append (car t) "-" (cadr t)) (if (eq? (car t) "hypolaria") -1 1))) 
+	      (list (string-append (car t) "-" (cadr t)) -1))
+	    butterfly-types))
+      -1)
+     (else
+      (let ((value (cadr (assoc name toxicity))))
+	(if value value -1))))))
+
+(define (set-healthiness name value)
+  (local-save
+   "clearwing-healthiness"
+   (map
+    (lambda (t)
+      (if (eq? name (car t)) 
+	  (list (car t) value) 
+	  t))
+    (local-load "clearwing-healthiness"))))
+ 
+(define (get-healthiness name)
+  (let ((healthiness (local-load-or-create "clearwing-healthiness" '())))
+    (cond 
+     ((null? healthiness) 
+      (local-save 
+       "clearwing-healthiness" 
+       (map (lambda (t) 
+	      (list (string-append (car t) "-" (cadr t)) 1))
 	    butterfly-types))
       1)
      (else
-      (let ((value (cadr (assoc name toxicity))))
+      (let ((value (cadr (assoc name healthiness))))
 	(if value value 1))))))
 
 (define (setup-morph-interface)
@@ -230,6 +256,9 @@
 
    ))
 
+(define butterfly-families
+  (list "ceratinia" "hypolaria" "hypothyris" "ithomia"))
+
 ;; (define backgrounds 
 ;;   ;; pair together images and seeds for generating plants
 ;;   (list (list "images/bg-01.jpg" "94255153685224915579")
@@ -286,7 +315,6 @@
   (list "Approach Probability" 0.33)
   (list "Circle Probability" 0.33)
   (list "Static Probability" 0.33)
-  (list "Toxicity" 1)
   (list "Health Decrease" 5)
   (list "Health Increase" 10)
   (list "Max Population" 10)

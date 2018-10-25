@@ -343,9 +343,17 @@
 
 (define save-version 1)
 
+;; butterflies can be healthy or toxic - randomly chosen,
+;; but the level of health/toxicity can be set via the admin
+;; for each variation
+(define (get-toxic-health-level family type)
+  (if (eq? family current-toxic-family)
+      (get-toxicity type)
+      (get-healthiness type)))
+
 (define (record-butterfly butterfly pos hit-or-missed) 
   (let ((type-string (string-append (car (butterfly-type butterfly)) "-" (cadr (butterfly-type butterfly)))))
-    (let ((toxicity (get-toxicity type-string)))
+    (let ((toxicity (get-toxic-health-level (car (butterfly-type butterfly)) type-string)))
       (local-add-item 
        "clearwing" 
        (string-append "hits-" (local-get-param "clearwing" "Session ID"))
@@ -403,7 +411,7 @@
 
 (define (butterfly-hit butterflies butterfly pos)
   (let ((type-string (string-append (car (butterfly-type butterfly)) "-" (cadr (butterfly-type butterfly)))))
-    (let ((toxicity (get-toxicity type-string)))
+    (let ((toxicity (get-toxic-health-level (car (butterfly-type butterfly)) type-string)))
       (set! butterflies-caught (+ butterflies-caught 1))
       (cond 
        ((< toxicity 0) 
@@ -669,6 +677,13 @@
   "bg-05.jpg"
   "bg-06.jpg"
   "bg-07.jpg"				
+  "bg-08.jpg"				
+  "bg-09.jpg"				
+  "bg-10.jpg"				
+  "bg-11.jpg"				
+  "bg-12.jpg"				
+  "bg-13.jpg"				
+  "bg-14.jpg"				
   "health.png"
   "heart.png")
  (lambda ()
@@ -770,6 +785,7 @@
 (define current-plantseed 0)
 (define class-a '())
 (define class-b '())
+(define current-toxic-family (choose butterfly-families))
 
 (define trees '())
 
@@ -831,7 +847,9 @@
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
-    
+    (set! current-toxic-family (choose butterfly-families))
+    (msg current-toxic-family)
+
     (let ((selected (local-load "clearwing-selected")))
       (set! class-b (local-load "clearwing-class"))
       (set! class-a (intersect-lists class-b (map (lambda (t) (string-append (car t) "-" (cadr t))) butterfly-types)))
@@ -884,20 +902,23 @@
       (set! butterflies '())
       (set! title-text 
 	    (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
-			  (list "Thankyou for playing")))
-
+			  (list (mtext-lookup "game-over-4"))))
+      
       (let ((score (score-position (local-get-param "clearwing" "Session ID"))))
 	(set! info-text 
 	      (make-textbox 
 	       (/ screen-width 2) 300 "20pt" 40 "left" 
 	       (list 
-		(string-append "You lasted " time-taken " seconds.")
+		(string-append (mtext-lookup "game-over-2") time-taken (mtext-lookup "game-over-3"))
 		(string-append "Caught " butterflies-caught " butterflies.") 
-		(string-append "This score puts you in position " (car score) " out of " (cadr score) " games today."))))))
+		(string-append 
+		 (mtext-lookup "game-over-5") (car score) 
+		 (mtext-lookup "game-over-6") (cadr score) 
+		 (mtext-lookup "game-over-7")))))))
     
     (set! button-a (make-text-button 
 		    (vector (- (/ screen-width 2) 200) 420 0) 
-		    50 "Play again"
+		    50 (mtext-lookup "game-over-play")
 		    (lambda ()
 		      (destroy game-root)
 		      (set! game-mode "game")
@@ -905,7 +926,7 @@
     
     (set! button-b (make-text-button 
 		    (vector (+ (/ screen-width 2) 200) 420 0) 
-		    50 "Quit"
+		    50 (mtext-lookup "game-over-exit")
 		    (lambda ()
 		      (destroy game-root)
 		      (set! game-mode "title")
@@ -958,14 +979,14 @@
     (when (and (< health 20) (< (modulo hint-time 2) 1))
 	  (set! ctx.fillStyle "#000")
 	  (set! ctx.globalAlpha 0.75)
-	  (ctx.fillRect (- (/ screen-width 2) 300) 240 
-			600 100)
+	  (ctx.fillRect (- (/ screen-width 2) 350) 240 
+			700 100)
 	  (set! ctx.globalAlpha 1.0)
 	  (set! ctx.fillStyle "#fff")	  
-	  (centre-text ctx "Warning: Low Health!" 
+	  (centre-text ctx (mtext-lookup "low-health") 
 		       (/ screen-width 2)
 		       300)) 
-
+    
     (when (< health 1)
 	  (destroy game-root)
 	  (set! game-mode "end")
