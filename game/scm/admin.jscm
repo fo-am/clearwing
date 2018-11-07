@@ -254,6 +254,14 @@
    (list "ithomia" "012")
    (list "ithomia" "013")
 
+   (list "transparent" "0")
+   (list "blue" "0")
+   (list "purple" "0")
+   (list "pink" "0")
+   (list "bck1" "0")
+   (list "bck2" "0")
+   (list "bck3" "0")
+
    ))
 
 (define butterfly-families
@@ -329,8 +337,8 @@
   (list "Circle Timeout Seconds" 10)
   (list "Hit Leeway Pixels" 10)
   (list "Butterfly wing size CM" 2.5)
-  (list "Butterfly opacity" 0.75)
-  (list "Butterfly ambient light" 0.5)
+  (list "Butterfly opacity" 1.0)
+  (list "Butterfly ambient light" 0.75)
   (list "Moving plants" 1)
   ))
 

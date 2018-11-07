@@ -88,6 +88,21 @@ resources = [
     "textures/ithomia-w-012.png",
     "textures/ithomia-w-013.png",
 
+    "textures/pink-b.png",
+    "textures/pink-w-0.png",
+    "textures/purple-b.png",
+    "textures/purple-w-0.png",
+    "textures/blue-b.png",
+    "textures/blue-w-0.png",
+    "textures/transparent-b.png",
+    "textures/transparent-w-0.png",
+    "textures/bck1-b.png",
+    "textures/bck1-w-0.png",
+    "textures/bck2-b.png",
+    "textures/bck2-w-0.png",
+    "textures/bck3-b.png",
+    "textures/bck3-w-0.png",
+
     "models/plane.obj",
     "models/lsys-plane2.obj",
 
