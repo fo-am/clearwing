@@ -302,6 +302,18 @@
 	"images/bg-12.jpg"
 	"images/bg-13.jpg"
 	"images/bg-14.jpg"
+
+	"images/new-bg1.JPG"
+	"images/new-bg2.JPG"
+	"images/new-bg3.JPG"
+	"images/new-bg4.JPG"
+	"images/new-bg5.JPG"
+	"images/new-bg6.JPG"
+	"images/new-bg7.JPG"
+	"images/new-bg8.JPG"
+	"images/new-bg9.JPG"
+	"images/new-bg10.JPG"
+	
 	))
 
 (define plant-seeds

@@ -684,6 +684,16 @@
   "bg-12.jpg"				
   "bg-13.jpg"				
   "bg-14.jpg"				
+  "new-bg1.JPG"
+  "new-bg2.JPG"
+  "new-bg3.JPG"
+  "new-bg4.JPG"
+  "new-bg5.JPG"
+  "new-bg6.JPG"
+  "new-bg7.JPG"				
+  "new-bg8.JPG"				
+  "new-bg9.JPG"				
+  "new-bg10.JPG"				
   "health.png"
   "heart.png")
  (lambda ()
@@ -847,15 +857,16 @@
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
-    (set! current-toxic-family (choose butterfly-families))
+    (set! current-toxic-family (car (choose-type)))
     (msg current-toxic-family)
-
+    
     (let ((selected (local-load "clearwing-selected")))
       (set! class-b (local-load "clearwing-class"))
       (set! class-a (intersect-lists class-b (map (lambda (t) (string-append (car t) "-" (cadr t))) butterfly-types)))
       (when (not (null? selected))
 	    (set! class-b (and-lists class-b selected))
 	    (set! class-a (and-lists class-a selected))))
+
     
     ;;(set! seed (foldl (lambda (i r) (string-append r i)) 
 ;;		      ""
