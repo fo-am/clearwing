@@ -1037,8 +1037,11 @@
 	 (set! leaf-obj (with-state 
 			 (translate (vector 1000 0 0)) 
 			 (load-primitive "models/lsys-plane2.obj")))
-	 (run-init)	 
+	 (run-init)
 
+	 (set! document.onclick (lambda (event)  
+				  (document.documentElement.webkitRequestFullscreen)))
+	 
 	 ;; (define p 
 	 ;;    (with-state 
 	 ;;     (hint-cullface)
