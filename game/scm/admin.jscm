@@ -352,5 +352,6 @@
   (list "Butterfly opacity" 1.0)
   (list "Butterfly ambient light" 0.75)
   (list "Moving plants" 1)
+  (list "Appearance Mult" 1)
   ))
 

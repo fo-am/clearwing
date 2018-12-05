@@ -41,6 +41,7 @@
 (define static-prob (local-get-param "clearwing" "Static Probability"))
 (define opacity (string->number (local-get-param "clearwing" "Butterfly opacity")))
 (define ambient (string->number (local-get-param "clearwing" "Butterfly ambient light")))
+(define appearance-mult (string->number (local-get-param "clearwing" "Appearance Mult")))
 (define fade-in-time 3)
 (define toxic-hit-time 1000)
 (define toxic-hit-duration 3)
@@ -234,12 +235,23 @@
    ((eq? state "title")
     (vector (+ -30 (* (rndf) 5)) (* (crndf) 15) -20))
    ((or (eq? state "circle") (eq? state "static"))
-    (random-point-frustum (get-camera-angle) 
-			  (+ min-appearance-depth
-			     (* (rndf) (- max-appearance-depth 
-					  min-appearance-depth)))))
+    (let ((ret (random-point-frustum (get-camera-angle) 
+				     (+ min-appearance-depth
+					(* (rndf) (- max-appearance-depth 
+						     min-appearance-depth))))))
+      (vector 
+       ;; squash by mult
+       (* (vx ret) appearance-mult)
+       (* (vy ret) appearance-mult)
+       (vz ret))))
    (else
-    (random-point-frustum (get-camera-angle) max-appearance-depth))))
+    (let ((ret (random-point-frustum (get-camera-angle) max-appearance-depth)))
+      (vector 
+       ;; squash by mult
+       (* (vx ret) appearance-mult)
+       (* (vy ret) appearance-mult)
+       (vz ret))))))
+      
 
 (define (update-butterfly b)
   (let ((t (butterfly-t b)))
@@ -922,11 +934,15 @@
 	       (list 
 		(string-append (mtext-lookup "game-over-2") time-taken (mtext-lookup "game-over-3"))
 		(string-append "Caught " butterflies-caught " butterflies.") 
-		(string-append 
-		 (mtext-lookup "game-over-5") (car score) 
-		 (mtext-lookup "game-over-6") (cadr score) 
-		 (mtext-lookup "game-over-7")))))))
-    
+		(if (eq? 1 (car score))
+		    (string-append 
+		     (mtext-lookup "game-over-first-1") (cadr score) 
+		     (mtext-lookup "game-over-first-2"))
+		    (string-append 
+		     (mtext-lookup "game-over-5") (car score) 
+		     (mtext-lookup "game-over-6") (cadr score) 
+		     (mtext-lookup "game-over-7"))))))))
+      
     (set! button-a (make-text-button 
 		    (vector (- (/ screen-width 2) 200) 420 0) 
 		    50 (mtext-lookup "game-over-play")
@@ -943,7 +959,7 @@
 		      (set! game-mode "title")
 		      (run-init)))))
    
-   (else 0)))
+    (else 0)))
 
 (define (render-game)
   (resize-glcanvas webgl-canvas)

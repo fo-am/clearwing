@@ -1,9 +1,9 @@
 ;; -*- mode: scheme; -*-
 (define i18n-text 
   (list
-   (list "title" (list "Clearwing Butterfly Game" "Les oiseaux affamés" ))
-   (list "splash1" (list "Take part in this citizen science game by" "Attrappez des papillons pour la science !"))
-   (list "splash2" (list "hunting butterflies in the jungle!" "Attrappez des papillons pour la science !" ))
+   (list "title" (list "Clearwing Butterfly Game" "Jeu des papillons transparents" ))
+   (list "splash1" (list "Take part in this citizen science game by" "Jouez à ce jeu de sciences participatives"))
+   (list "splash2" (list "hunting butterflies in the jungle!" "en chassant les papillons dans la jungle!" ))
    (list "play-button" (list "Play" "Démarrer le jeu" ))
    (list "made-by-button" (list "Made by" "Obtenu par" ))
    (list "instructions-button" (list "GO!" "C'est parti !" ))
@@ -15,10 +15,12 @@
    (list "game-over-2" (list "You survived " "Vous avez survécu " ))
    (list "game-over-3" (list " seconds " " secondes " ))
    (list "game-over-4" (list "Thankyou for playing!" "Merci d'avoir joué !" ))
-   (list "game-over-5" (list "This score puts you in position "))
-   (list "game-over-6" (list " out of "))
-   (list "game-over-7" (list " games today."))
-
+   (list "game-over-5" (list "This score puts you in position " "Vous êtes "))
+   (list "game-over-6" (list " out of " " ème sur "))
+   (list "game-over-7" (list " games today." " jeux aujourd'hui."))
+   (list "game-over-first-1" (list "You came first out of " "Vous êtes premier.ère sur "))
+   (list "game-over-first-2" (list " games today." " jeux aujourd'hui."))
+  
    (list "game-over-play" (list "Play again" "Rejouer" ))
    (list "game-over-exit" (list "Quit game" "Quitter le jeu" ))
 
