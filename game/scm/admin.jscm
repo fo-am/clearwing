@@ -12,27 +12,30 @@
 	  (_ (+ n 1) max 
 	     (string-append r (local->csv "clearwing" (string-append "hits-" n))))
 	  (_ (+ n 1) max r)))))
-  (dbg (_ 0 (+ (local-get-param "clearwing" "Session ID") 1) 
-	  (string-append "data-version, hit-or-missed, clock-time, game-time, born-time, session, butterfly-id, state, type, healthiness, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, birth-pos-x, birth-pos-y, birth-pos-z, birth-screen-x, birth-screen-y, screen-time, random-seed, background, "
-			 "Plant Random Seed"
-			 "Moving plants visible, "
-			 "Approach Probability, "
-			 "Circle Probability, "
-			 "Static Probability, "
-			 "Health Decrease, "
-			 "Health Increase, "
-			 "Max Population, "
-			 "Starting Population, "
-			 "New Butterfly Chance, "
-			 "Butterfly Speed, "
-			 "Flap Speed, "
-			 "Max Appearance Depth, "
-			 "Min Appearance Depth, "
-			 "Path Variation Degrees, "
-			 "Circle Speed, "
-			 "Circle Timeout Seconds, "
-			 "Hit Leeway Pixels, "
-			 "Butterfly wing size CM\\n"))))
+  (_ 0 (+ (local-get-param "clearwing" "Session ID") 1) 
+     (string-append "data-version, hit-or-missed, clock-time, game-time, born-time, session, butterfly-id, state, type, healthiness, screen-size-pixels, camera-distance, mouse-x, mouse-y, world-x, world-y, world-z, dir-x, dir-y, dir-z, birth-pos-x, birth-pos-y, birth-pos-z, birth-screen-x, birth-screen-y, screen-time, random-seed, background, "
+		    "Plant Random Seed, "
+		    "Player gender, "
+		    "Player age, "
+		    "Player played before, "
+		    "Moving plants visible, "
+		    "Approach Probability, "
+		    "Circle Probability, "
+		    "Static Probability, "
+		    "Health Decrease, "
+		    "Health Increase, "
+		    "Max Population, "
+		    "Starting Population, "
+		    "New Butterfly Chance, "
+		    "Butterfly Speed, "
+		    "Flap Speed, "
+		    "Max Appearance Depth, "
+		    "Min Appearance Depth, "
+		    "Path Variation Degrees, "
+		    "Circle Speed, "
+		    "Circle Timeout Seconds, "
+		    "Hit Leeway Pixels, "
+		    "Butterfly wing size CM\\n")))
 
 (define (set-game-param key value)
   (local-set-param "clearwing" key value))
@@ -54,6 +57,7 @@
     (string-append
      "<div style='display:inline-block; width:100px'>
      <button id='" id "' onclick='butterfly_toggle(this);'>
+       <small>" id "</small>
        <img src='textures/" (car name) "-w-" (cadr name) ".png' width=100 height=100>
      </button>
      <center>
@@ -353,5 +357,8 @@
   (list "Butterfly ambient light" 0.75)
   (list "Moving plants" 1)
   (list "Appearance Mult" 1)
+  (list "gender" "")
+  (list "age" "")
+  (list "played" "")
   ))
 

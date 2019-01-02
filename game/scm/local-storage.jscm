@@ -115,6 +115,7 @@
    (else (msg "unknown-csv no idea what") (msg l) (msg "is..."))))
 
 (define (local->csv namespace name) 
+  (msg name)
   (unknown->csv (local-load (string-append namespace "-" name))))
 
 (define (download-data filename text) 

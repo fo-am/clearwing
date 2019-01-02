@@ -175,7 +175,7 @@
 		(vmul (vnormalise (vsub (vector 0 0 0) pos)) 
 		      butterfly-speed))))
 	     root
-	     (load-primitive "models/plane.obj")
+	     (if (eq? state "static") -1 (load-primitive "models/plane.obj"))
 	     (load-primitive "models/plane.obj")
 	     (if (eq? state "static") 0 (rndf)) 
 	     0 
@@ -399,6 +399,11 @@
 	(butterfly-jitter butterfly)
 	current-background
 	current-plantseed
+	
+	(local-get-param "clearwing" "gender")
+	(local-get-param "clearwing" "age")
+	(local-get-param "clearwing" "played")
+	
 	(local-get-param "clearwing" "Moving plants")
 	(local-get-param "clearwing" "Approach Probability")
 	(local-get-param "clearwing" "Circle Probability")
@@ -717,7 +722,6 @@
   (let ((depth (list-ref desc 0))
 	(rot (list-ref desc 1))
 	(rules (list-ref desc 2)))
-    (msg rules)
     (crop
      (shuffle
       (with-state
@@ -808,8 +812,19 @@
 (define class-a '())
 (define class-b '())
 (define current-toxic-family (choose butterfly-families))
+(define option-buttons '())
 
 (define trees '())
+
+(define (option-button index text value category next)
+  (make-text-button 
+   (vector (/ screen-width 2) (+ 400 (* index 60)) 0) 
+   30 (mtext-lookup text)
+   (lambda ()
+     (local-set-param "clearwing" category value) 
+     (set! game-mode next)
+     (when (eq? next "game") (destroy game-root))
+     (run-init))))
 
 (define (run-init)
   (cond 
@@ -832,8 +847,7 @@
 		    (vector (/ screen-width 2) 400 0) 
 		    50 (mtext-lookup "play-button")
 		    (lambda ()
-		      (destroy game-root)
-		      (set! game-mode "game")
+		      (set! game-mode "gender-question")
 		      (run-init))))
     
     (set! button-eng (make-text-button 
@@ -852,7 +866,38 @@
 			(destroy game-root)
 			(run-init))))
     )
-   
+   ((eq? game-mode "gender-question")
+    (set! title-text 
+	  (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
+			(list (mtext-lookup "gender"))))
+    (set! option-buttons
+	  (list
+	   (option-button 0 "gender-1" "female" "gender" "age-question")
+	   (option-button 1 "gender-2" "other" "gender" "age-question")
+	   (option-button 2 "gender-3" "male" "gender" "age-question")
+	   (option-button 3 "gender-4" "not-say" "gender" "age-question"))))
+
+   ((eq? game-mode "age-question")
+    (set! title-text 
+	  (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
+			(list (mtext-lookup "age"))))
+    (set! option-buttons
+	  (list
+	   (option-button 0 "age-1" "under-10" "age" "played-question")
+	   (option-button 1 "age-2" "10-15" "age" "played-question")
+	   (option-button 2 "age-3" "16-35" "age" "played-question")
+	   (option-button 3 "age-4" "36-50" "age" "played-question")
+	   (option-button 4 "age-5" "over-50" "age" "played-question")
+	   (option-button 5 "age-6" "not-say" "age" "played-question"))))
+   ((eq? game-mode "played-question")
+    (set! title-text 
+	  (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
+			(list (mtext-lookup "played"))))
+    (set! option-buttons
+	  (list
+	   (option-button 0 "played-1" "yes" "played" "game")
+	   (option-button 1 "played-2" "no" "played" "game"))))
+  
    ((eq? game-mode "game")
     (advance-session-id)
     (set! game-root (build-locator))
@@ -986,6 +1031,21 @@
     (text-button-render! button-eng)
     (text-button-render! button-fra)
     (set! ctx.font (string-append "30pt " canvas-font))
+    0)
+   ((or (eq? game-mode "gender-question")
+	(eq? game-mode "age-question")
+	(eq? game-mode "played-question"))
+    (set! butterflies (update-butterflies butterflies game-mode))
+    (animate-butterflies! butterflies (time))
+
+    (ctx.clearRect 0 0 screen-width screen-height)	  
+    (set! ctx.fillStyle "#fff")
+    (textbox-render! title-text)
+    (for-each
+     (lambda (b)
+       (text-button-update b 0) 
+       (text-button-render! b))
+     option-buttons)
     0)
    ((eq? game-mode "game")
     (set! butterflies (update-butterflies butterflies game-mode))
