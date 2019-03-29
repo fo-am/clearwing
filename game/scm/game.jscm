@@ -285,7 +285,7 @@
 	  (butterfly-dir b)
 	  )))))
 
-(define (animate-butterfly! b t)
+(define (animate-butterfly! b t type)
   (let (;;(opacity (min (/ (butterfly-t b) fade-in-time) 1))
 	(a (* (+ 0.5 (* (butterfly-jitter b) 0.5)) t flap-speed)))
     (let ((sa (* -3.5 (- (abs (sin a)) 0.45))))
@@ -294,7 +294,15 @@
        (identity)
        (translate (butterfly-pos b))
        (translate (vector 0 (/ sa 4) 0))
-       (maim (vnormalise (butterfly-dir b)) (vector 0 1 0))
+       (if (eq? type "static")
+	   ;; aim towards the camera
+	   (begin 
+	     (maim (vnormalise (butterfly-pos b)) (vector 0 1 0))
+	     (if (< (vx (butterfly-dir b)) 0)
+		 (rotate (vector 0 0 90))
+		 (rotate (vector 0 0 -90)))
+	     )
+	   (maim (vnormalise (butterfly-dir b)) (vector 0 1 0)))
        (rotate (vector 0 90 -90))
        )
       (with-primitive 
@@ -509,10 +517,10 @@
       ((eq? (butterfly-state b) "dead")
        (destroy-butterfly b) #f)
       (else #t)))
-   (if (or (null? class-b) (eq? mode "title"))
+   (if (or (null? class-b) (eq? mode "title") (eq? mode "end"))
        ;; no classes, normal mode of operation
        (if (and (< (length b) max-population)
-		(< (rndf) (if (eq? mode "title") 0.01 new-butterfly-chance)))
+		(< (rndf) (if (or (eq? mode "end") (eq? mode "title")) 0.01 new-butterfly-chance)))
 	   (cons (build-new-butterfly mode #f) b)
 	   b)
        ;; spawn two, one of each class
@@ -539,8 +547,8 @@
   (for-each 
    (lambda (b)
      (if (eq? (butterfly-state b) "static")
-	 (animate-butterfly! b 1.15)
-	 (animate-butterfly! b t)))
+	 (animate-butterfly! b 1.15 "static")
+	 (animate-butterfly! b t "other")))
    b))
 
 (define (draw-debug butterflies)
@@ -818,7 +826,7 @@
 
 (define (option-button index text value category next)
   (make-text-button 
-   (vector (/ screen-width 2) (+ 400 (* index 60)) 0) 
+   (vector (/ screen-width 2) (+ 300 (* index 60)) 0) 
    30 (mtext-lookup text)
    (lambda ()
      (local-set-param "clearwing" category value) 
@@ -833,6 +841,7 @@
     (canvas-setup)
     (set! new-butterfly-chance 0.05)
     (set! game-root (build-locator))
+        
     (set! butterflies '())
     (set! title-text 
 	  (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
@@ -957,8 +966,11 @@
 	)
    
    ((eq? game-mode "end")
+    (canvas-setup)
+    (set! butterflies '())
     (black-background)
     (set! new-butterfly-chance 0.05)
+    (identity) ;; eh? why needed???
     (set! game-root (build-locator))
     (let ((time-taken (/ (- (js "new Date()") game-start-time) 1000.0)))
 
@@ -967,7 +979,6 @@
        (list (local-get-param "clearwing" "Session ID")
 	     time-taken butterflies-caught))
 
-      (set! butterflies '())
       (set! title-text 
 	    (make-textbox (/ screen-width 2) 230 "30pt" 40 "left" 
 			  (list (mtext-lookup "game-over-4"))))
@@ -978,7 +989,9 @@
 	       (/ screen-width 2) 300 "20pt" 40 "left" 
 	       (list 
 		(string-append (mtext-lookup "game-over-2") time-taken (mtext-lookup "game-over-3"))
-		(string-append "Caught " butterflies-caught " butterflies.") 
+		(if (eq? butterflies-caught 1)
+		    (mtext-lookup "caught-1")
+		    (string-append (mtext-lookup "caught") butterflies-caught (mtext-lookup "butterflies"))) 
 		(if (eq? 1 (car score))
 		    (string-append 
 		     (mtext-lookup "game-over-first-1") (cadr score) 
@@ -1143,6 +1156,7 @@
 (resize-glcanvas webgl-canvas)
 (resize-canvas canvas)
 (set-camera-angle 53)
+;(set-camera-angle 93)
 (ctx.fillText "Loading..." 100 100)
 
 (every-frame (start))

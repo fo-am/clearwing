@@ -258,18 +258,29 @@
    (list "ithomia" "012")
    (list "ithomia" "013")
 
-   (list "transparent" "0")
-   (list "blue" "0")
-   (list "purple" "0")
-   (list "pink" "0")
-   (list "bck1" "0")
-   (list "bck2" "0")
-   (list "bck3" "0")
+   (list "apo" "0")
+   (list "apo" "1")
+   (list "apo" "2")
+   (list "crypt" "0")
+   (list "crypt" "1")
+   (list "crypt" "2")
+   (list "cryptora" "0")
+   (list "cryptora" "1")
+   (list "cryptora" "2")
+   (list "crypttrans" "0")
+
+   ;;(list "blue" "0")
+   ;;(list "purple" "0")
+   ;;(list "pink" "0")
+   ;;(list "bck1" "0")
+   ;;(list "bck2" "0")
+   ;;(list "bck3" "0")
 
    ))
 
 (define butterfly-families
-  (list "ceratinia" "hypolaria" "hypothyris" "ithomia"))
+  (list "ceratinia" "hypolaria" "hypothyris" "ithomia" 
+	"apo" "crypt" "cryptora" "crypttrans"))
 
 ;; (define backgrounds 
 ;;   ;; pair together images and seeds for generating plants

@@ -2,9 +2,9 @@
 (define i18n-text 
   (list
    (list "title" (list "Clearwing Butterfly Game" "Jeu des papillons transparents" ))
-   (list "splash1" (list "Take part in this citizen science game by" "Jouez à ce jeu de sciences participatives"))
-   (list "splash2" (list "hunting butterflies in the jungle!" "en chassant les papillons dans la jungle!" ))
-   (list "play-button" (list "Play" "Démarrer le jeu" ))
+   (list "splash1" (list "Take part in this citizen science game by" "Jouez à chasser les papillons dans la jungle!"))
+   (list "splash2" (list "hunting butterflies in the jungle!" "    " ))
+   (list "play-button" (list "Play" "Démarrez le jeu" ))
    (list "made-by-button" (list "Made by" "Obtenu par" ))
    (list "instructions-button" (list "GO!" "C'est parti !" ))
    (list "gender" (list "What is your gender?" "Quel est ton sexe?"))
@@ -34,10 +34,11 @@
    (list "game-over-7" (list " games today." " jeux aujourd'hui."))
    (list "game-over-first-1" (list "You came first out of " "Vous êtes premier.ère sur "))
    (list "game-over-first-2" (list " games today." " jeux aujourd'hui."))
-  
+   (list "caught" (list "Caught " "Attrapé "))
+   (list "butterflies" (list " butterflies." " papillons."))  
+   (list "caught-1" (list "Caught one butterfly." "Attrapé un papillon."))
    (list "game-over-play" (list "Play again" "Rejouer" ))
    (list "game-over-exit" (list "Quit game" "Quitter le jeu" ))
-
    (list "enter-name" (list "Enter your name" "Entrez votre nom" ))
    (list "enter-name-delete" (list "Delete" "Suprimer" ))
    (list "enter-name-ok" (list "Done" "OK" ))
