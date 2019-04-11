@@ -923,7 +923,9 @@
     (set! butterflies-caught 0)
     (set! game-start-time (js "new Date()"))
     (set! new-butterfly-chance (local-get-param "clearwing" "New Butterfly Chance"))
-    (set! current-toxic-family (car (choose-type)))
+    (if (eq? (local-get-param "clearwing" "Do Toxic") "1")
+	(set! current-toxic-family (car (choose-type)))
+	(set! current-toxic-family "none"))
     (msg current-toxic-family)
     
     (let ((selected (local-load "clearwing-selected")))

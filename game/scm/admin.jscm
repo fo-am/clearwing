@@ -57,7 +57,7 @@
     (string-append
      "<div style='display:inline-block; width:100px'>
      <button id='" id "' onclick='butterfly_toggle(this);'>
-       <small>" id "</small>
+       <small><small>" id "</small></small>
        <img src='textures/" (car name) "-w-" (cadr name) ".png' width=100 height=100>
      </button>
      <center>
@@ -268,19 +268,58 @@
    (list "cryptora" "1")
    (list "cryptora" "2")
    (list "crypttrans" "0")
-
+   
+   (list "aponew" "0")
+   (list "aponew" "1")
+   (list "aponew" "2")
+   (list "aponewdark" "0")
+   (list "aponewdark" "1")
+   (list "aponewdark" "2")
+   (list "aponewmedium" "0")
+   (list "aponewmedium" "1")
+   (list "aponewmedium" "2")
+   (list "cryptdark" "0")
+   (list "cryptdark" "1")
+   (list "cryptdark" "2")
+   (list "cryptmedium" "0")
+   (list "cryptmedium" "1")
+   (list "cryptmedium" "2")
+   (list "cryptnew" "0")
+   (list "cryptnew" "1")
+   (list "cryptnew" "2")
+   (list "cryptnewdark" "0")
+   (list "cryptnewdark" "1")
+   (list "cryptnewdark" "2")
+   (list "cryptnewmedium" "0")
+   (list "cryptnewmedium" "1")
+   (list "cryptnewmedium" "2")
+   (list "cryptoranew" "0")
+   (list "cryptoranew" "1")
+   (list "cryptoranew" "2")   
+   (list "translucentclear" "0")
+   (list "translucentdark" "0")
+   (list "translucentmedium" "0")
+  
    ;;(list "blue" "0")
    ;;(list "purple" "0")
    ;;(list "pink" "0")
    ;;(list "bck1" "0")
    ;;(list "bck2" "0")
    ;;(list "bck3" "0")
-
+   
    ))
 
 (define butterfly-families
   (list "ceratinia" "hypolaria" "hypothyris" "ithomia" 
-	"apo" "crypt" "cryptora" "crypttrans"))
+	"apo" "crypt" "cryptora" "crypttrans"
+	"aponew" "aponewdark" "aponewmedium" 
+	"cryptdark" "cryptmedium"
+	"cryptnew" "cryptnewdark" "cryptnewmedium"
+	"cryptoranew" 
+	"translucentclear"
+	"translucentdark"
+	"translucentmedium"
+	))
 
 ;; (define backgrounds 
 ;;   ;; pair together images and seeds for generating plants
@@ -347,27 +386,28 @@
  "clearwing" 
  (list
   (list "Session ID" 0)
-  (list "Approach Probability" 0.33)
-  (list "Circle Probability" 0.33)
-  (list "Static Probability" 0.33)
+  (list "Approach Probability" 0)
+  (list "Circle Probability" 0)
+  (list "Static Probability" 1)
+  (list "Do Toxic" 0)
   (list "Health Decrease" 5)
-  (list "Health Increase" 10)
-  (list "Max Population" 10)
-  (list "Starting Population" 5)
-  (list "New Butterfly Chance" 0.03)
+  (list "Health Increase" 5)
+  (list "Max Population" 2)
+  (list "Starting Population" 2)
+  (list "New Butterfly Chance" 0.3)
   (list "Butterfly Speed" 0.125)
-  (list "Flap Speed" 8)
-  (list "Max Appearance Depth" -200)
-  (list "Min Appearance Depth" -20)
+  (list "Flap Speed" 4)
+  (list "Max Appearance Depth" -70)
+  (list "Min Appearance Depth" -50)
   (list "Path Variation Degrees" 10)
   (list "Circle Speed" 3)
   (list "Circle Timeout Seconds" 10)
   (list "Hit Leeway Pixels" 10)
   (list "Butterfly wing size CM" 2.5)
-  (list "Butterfly opacity" 1.0)
-  (list "Butterfly ambient light" 0.75)
+  (list "Butterfly opacity" 1.1)
+  (list "Butterfly ambient light" 0.7)
   (list "Moving plants" 1)
-  (list "Appearance Mult" 1)
+  (list "Appearance Mult" 0.8)
   (list "gender" "")
   (list "age" "")
   (list "played" "")
