@@ -138,6 +138,8 @@ resources = [
    "textures/cryptoranew-w-2.png",  
    "textures/translucentclear-w-0.png",
    "textures/translucentdark-w-0.png",
+   "textures/translucentdarkg-w-0.png",
+   "textures/translucentdarkh-w-0.png",
    "textures/translucentmedium-w-0.png",
 
    "textures/aponew-b.png",
@@ -151,6 +153,8 @@ resources = [
    "textures/cryptoranew-b.png",
    "textures/translucentclear-b.png",
    "textures/translucentdark-b.png",
+   "textures/translucentdarkg-b.png",
+   "textures/translucentdarkh-b.png",
    "textures/translucentmedium-b.png",
 
 

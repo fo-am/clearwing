@@ -298,6 +298,8 @@
    (list "cryptoranew" "2")   
    (list "translucentclear" "0")
    (list "translucentdark" "0")
+   (list "translucentdarkg" "0")
+   (list "translucentdarkh" "0")
    (list "translucentmedium" "0")
   
    ;;(list "blue" "0")
@@ -318,6 +320,8 @@
 	"cryptoranew" 
 	"translucentclear"
 	"translucentdark"
+	"translucentdarkg"
+	"translucentdarkh"
 	"translucentmedium"
 	))
 
